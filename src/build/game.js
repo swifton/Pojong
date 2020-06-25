@@ -413,10 +413,13 @@ function mouse_up(x, y) {
                 selected_polygon_i = undefined;
             }
             else if (polygons[selected_polygon_i].template_i == polygons[hovered_polygon_i].template_i) {
-                polygons.splice(selected_polygon_i, 1);
-                polygons.splice(hovered_polygon_i, 1);
+                var polygon1_i = Math.min(selected_polygon_i, hovered_polygon_i);
+                var polygon2_i = Math.max(selected_polygon_i, hovered_polygon_i);
+                polygons.splice(polygon2_i, 1);
+                polygons.splice(polygon1_i, 1);
                 hovered_polygon_i = undefined;
                 selected_polygon_i = undefined;
+                update_polygons_freeness();
             }
         }
     }
@@ -463,7 +466,7 @@ function mouse_move(x, y) {
     // Hovering above a polygon?
     var found = false;
     for (var polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-        if (point_inside_polygon(mouse_world_coord, polygons[polygon_i])) {
+        if (point_inside_polygon(mouse_world_coord, polygons[polygon_i]) && polygons[polygon_i].free) {
             hovered_polygon_i = polygon_i;
             found = true;
             break;
