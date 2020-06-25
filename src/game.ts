@@ -118,6 +118,7 @@ let antirhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0},
 
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
 let templates = [triangle_template, hexagon_template, rhombus_template, prism_template, antirhombus_template];
+let colors = ["red", "green", "orange", "cyan", "yellow", "blue", "magenta", "white", "black", "brown"];
 
 function step() {
     render();
@@ -203,19 +204,7 @@ function render() {
 	// Drawing polygons
 	for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
 		let polygon = polygons[polygon_i];
-        draw_polygon(polygon, "green", 1);
-        
-        /*
-        // Visualizing and labeling the center of the polygon.
-        main_context.fillStyle = "orange";
-        main_context.beginPath();
-        let canv_v = world_to_canvas(polygon.center);
-        main_context.font = '10px serif';
-        main_context.fillText(polygon_i.toString(), canv_v.x, canv_v.y);
-        main_context.arc(canv_v.x, canv_v.y, 5, 0, 2 * Math.PI);
-        main_context.fill();
-        main_context.fillStyle = "green";
-        */
+        draw_polygon(polygon, colors[polygon.template_i], 1);
     }
 	
     if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "red", 1);
@@ -553,4 +542,5 @@ function mouse_scroll(direction: number): void {
 
 let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};
 create_foam();
-//add_polygon(first_edge, triangle_template);
+
+if (templates.length > colors.length) console.log("ERROR: Not enough colors.");
