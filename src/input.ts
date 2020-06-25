@@ -9,8 +9,8 @@ function do_key_down(e: KeyboardEvent) {
     //console.log(i);
     
     if (i == 32) space_down();
-    if (i == 81) q_down();
-    if (i == 69) e_down();
+    // if (i == 81) q_down();
+    //if (i == 69) e_down();
     
     /*
         if (i == 37 && typeof left_key_down != "undefined") left_key_down();

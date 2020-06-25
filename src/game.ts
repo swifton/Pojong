@@ -1,10 +1,3 @@
-// TODO: 
-// 1. Handle the multiedge union case.
-// 2. Replace edge matching with online check for collision detection
-// 3. Make sure you can't hover over two things at the same time.
-// 4. It looks like you can hover over an edge while being outside it on the line.
-// 5. Zoom to the cursor like google maps.
-
 function random_integer(min: number, max: number): number { // Including min, excluding max
 	return (min + Math.floor(Math.random() * (max - min)));
 }
@@ -50,7 +43,7 @@ interface Transformation {
 class Polygon {
     center: Vector;
     
-	constructor(public vertices: Vector[]) {
+	constructor(public vertices: Vector[], public polygon_template: Polygon_Template) {
 		this.center = {x: 0, y: 0}
         for (var vertex of vertices) {
             this.center = sum(this.center, vertex);
@@ -64,7 +57,7 @@ class Polygon {
 let main_canvas = <HTMLCanvasElement> document.getElementById('canvas');
 let main_context = main_canvas.getContext('2d');
 
-let unit_pix: number = 200;
+let unit_pix: number = 50;
 let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
 
@@ -76,11 +69,8 @@ let old_pan_offset_y: number = 0;
 let panned = false;
 
 let mouse_world_coord: Vector = {x: 0, y: 0};
-let hovered_polygon: Polygon = undefined;
-let hovered_vertex: Vector = undefined;
-let hovered_edge: Edge = undefined;
-let selected_vertex: Vector = undefined;
-let closest_edge: Edge = undefined;
+let hovered_polygon_i: number = undefined;
+let selected_polygon_i: number = undefined;
 let base_polygon: Polygon = undefined;
 let to_add_type = 3;
 
@@ -128,10 +118,6 @@ let antirhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0},
 
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
 let templates = [triangle_template, hexagon_template, rhombus_template, prism_template, antirhombus_template];
-let current_template: Polygon_Template = triangle_template;
-
-let candidate_polygon: Polygon = undefined;
-let candidate_edge_i: number = undefined;
 
 function step() {
     render();
@@ -232,20 +218,11 @@ function render() {
         */
     }
 	
-    if (candidate_polygon != undefined) draw_polygon(candidate_polygon, "green", 0.5);
-    if (hovered_polygon != undefined) draw_polygon(hovered_polygon, "red", 1);
+    if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "red", 1);
+    if (selected_polygon_i != undefined) draw_polygon(polygons[selected_polygon_i], "red", 1);
 	
-	if (closest_edge != undefined) draw_edge(closest_edge, "cyan");
-    if (hovered_edge != undefined) draw_edge(hovered_edge, "yellow");
-    
-    if (hovered_vertex != undefined) draw_point(hovered_vertex, "yellow");
-    if (selected_vertex != undefined) draw_point(selected_vertex, "yellow");
-    
 	// Visualizing the mouse position.
     //draw_point(mouse_world_coord, "red");
-    
-    // Visualizing the line by which the polygons will be cut.
-    if (hovered_vertex != undefined && selected_vertex != undefined) draw_edge({v1: hovered_vertex, v2: selected_vertex}, "blue");
 }
 
 function same_vertex(vertex_1: Vector, vertex_2: Vector): boolean {
@@ -329,8 +306,9 @@ function transform(point: Vector, transformation: Transformation): Vector {
 
 // Tries to construct a polygon from a given template on the given edge, returns whether it was successful.
 // starting_vx_i is the first vertex of the edge that needs to be matched.
-function create_candidate_polygon(edge: Edge, base: Polygon, p_template: Polygon_Template, starting_vx_i: number): boolean {
-    if (starting_vx_i < 0 || starting_vx_i >= p_template.vertices.length) {
+function add_polygon(edge: Edge, base: Polygon, polygon_template: Polygon_Template) {
+    let starting_vx_i = 0;
+    if (starting_vx_i < 0 || starting_vx_i >= polygon_template.vertices.length) {
         console.log("ERROR: Invalid starting vertex index.");
         return false;
     }
@@ -350,7 +328,7 @@ function create_candidate_polygon(edge: Edge, base: Polygon, p_template: Polygon
     
     let polygon_vertices = [];
     let target_edge: Edge = {v1: starting_v2, v2: starting_v1};
-    let first_template_edge: Edge = {v1: p_template.vertices[starting_vx_i], v2: p_template.vertices[(starting_vx_i + 1) % p_template.vertices.length]};
+    let first_template_edge: Edge = {v1: polygon_template.vertices[starting_vx_i], v2: polygon_template.vertices[(starting_vx_i + 1) % polygon_template.vertices.length]};
     
     if (Math.abs(euclid(first_template_edge.v1, first_template_edge.v2) - euclid(target_edge.v1, target_edge.v2)) > threshold) {
         console.log("ERROR: Can't glue together edges of different lengths.");
@@ -359,8 +337,8 @@ function create_candidate_polygon(edge: Edge, base: Polygon, p_template: Polygon
     
     let transformation = find_transformation(first_template_edge, target_edge);
     
-    for (let vertex_i = 0; vertex_i < p_template.vertices.length; vertex_i += 1) {
-        let p_vertex = transform(p_template.vertices[vertex_i], transformation);
+    for (let vertex_i = 0; vertex_i < polygon_template.vertices.length; vertex_i += 1) {
+        let p_vertex = transform(polygon_template.vertices[vertex_i], transformation);
         polygon_vertices.push(p_vertex);
     }
     
@@ -411,7 +389,7 @@ function create_candidate_polygon(edge: Edge, base: Polygon, p_template: Polygon
         }
     }
     
-    let new_polygon = new Polygon(polygon_vertices);
+    let new_polygon = new Polygon(polygon_vertices, polygon_template);
     
     // Checking that edges of the new polygon don't intersect with edges 
     // of existing polygons.
@@ -438,16 +416,9 @@ function create_candidate_polygon(edge: Edge, base: Polygon, p_template: Polygon
         }
     }
     
-    candidate_polygon = new_polygon;
+    polygons.push(new_polygon);
     console.log("Success!");
     return true;
-}
-
-function add_polygon(edge: Edge, base: Polygon, p_template: Polygon_Template) {
-    if (create_candidate_polygon(edge, base, p_template, 0)) {
-        polygons.push(candidate_polygon);
-        candidate_polygon = undefined;
-    }
 }
 
 function create_foam() {
@@ -487,102 +458,6 @@ function point_is_on_line(vertex1: Vector, vertex2: Vector, point: Vector): bool
     return Math.abs(determinant) < 0.01;
 }
 
-// Finds the intersection of two segments. Assumes that they intersect. Run a check before calling this function.
-function segment_intersection(v1: Vector, v2: Vector, v3: Vector, v4: Vector): Vector {
-    let threshold = 0.01;
-    // Making a system of linear equations for alpha and beta -- parameters that parameterize the lines.
-    let w1 = sub(v3, v4);
-    let w2 = sub(v2,v1);
-    let w3 = sub(v2,v4);
-    
-    let determinant = w1.x * w2.y - w1.y * w2.x;
-    // Degenerate cases -- parallel segments and segments on the same line.
-    if (Math.abs(determinant) < threshold) return {x: undefined, y: undefined};
-    
-    // Solving the system of linear equations.
-    let alpha = (1/determinant) * (w2.y * w3.x - w2.x * w3.y);
-    let beta = (1/determinant) * (-w1.y * w3.x + w1.x * w3.y);
-    
-    // The intersection has to be inside both segments.
-    if (alpha > 1 - threshold || alpha < threshold) return {x: undefined, y: undefined};
-    if (beta > 1 - threshold || beta < threshold) return {x: undefined, y: undefined};
-    
-    let new_vertex = sum(mul(v3, alpha), mul(v4, 1 - alpha));
-    return new_vertex;
-}
-
-function cut_polygons(): void {
-    let v1 = hovered_vertex;
-    let v2 = selected_vertex;
-    let w1 = sub(v1, v2);
-    
-    // Array of polygons that we will add.
-    let polygons_vxs: Vector[][] = [];
-    
-    for (var polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-        let polygon = polygons[polygon_i];
-        
-        // Detecting whether we need to cut the polygon. And if we do, where to cut it.
-        // The number is the index of the vertex where the polygon starts or ends.
-        // The vector is an additonal vertex to add, if there is any (i.e. the line crosses an edge, and not a vertex).
-        let starts: [number, Vector][] = [];
-        let ends: [number, Vector][] = [];
-        
-        for (let vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
-            let vx2_i = (vx_i + 1) % polygon.vertices.length;
-            let vx1 = polygon.vertices[vx_i];
-            let vx2 = polygon.vertices[vx2_i];
-            let vx3 = polygon.vertices[(vx_i + 2) % polygon.vertices.length];
-            
-            if (point_is_on_line(v1, v2, vx2) && edges_intersect({v1: v1, v2: v2}, {v1: vx1, v2: vx3})) {
-                // The line enters or exits the polygon through a vertex.
-                if (!point_is_on_line(v1, v2, vx1)) ends.push([vx2_i, undefined]);
-                if (!point_is_on_line(v1, v2, vx3)) starts.push([vx2_i, undefined]);
-            } else {
-                // The line enters or exits the polygon through an edge.
-                if (!point_is_on_line(v1, v2, vx1)) {
-                    if (edges_intersect({v1: v1, v2: v2}, {v1: vx1, v2: vx2})) {
-                        let intersection = segment_intersection(v1, v2, vx1, vx2);
-                        starts.push([vx2_i, intersection]);
-                        ends.push([vx_i, intersection]);
-                    }
-                }
-            }
-        }
-        
-        if (starts.length == 0) continue;
-        if (starts.length != ends.length) {
-            console.log("ERROR: Different start and end lengths, " + starts.length.toString() + ", " + ends.length.toString());
-            return;
-        }
-        
-        // Constructing polygons according to the start/end markup we made.
-        for (let loop_i = 0; loop_i < starts.length; loop_i  += 1) {
-            let start = starts[loop_i];
-            let end = ends[(loop_i + 1) % ends.length];
-            
-            let c_polygon_vxs: Vector[] = [];
-            
-            // In case if the line enters or exits through an edge.
-            if (end[1] != undefined) c_polygon_vxs.push(end[1]);
-            if (start[1] != undefined) c_polygon_vxs.push(start[1]);
-            
-            // Adding the vertices.
-            for (let vx_i = start[0]; vx_i != end[0]; vx_i = (vx_i + 1) % polygon.vertices.length) {
-                c_polygon_vxs.push(polygon.vertices[vx_i]);
-            }
-            c_polygon_vxs.push(polygon.vertices[end[0]]);
-            
-            polygons_vxs.push(c_polygon_vxs);
-        }
-        
-        polygons.splice(polygon_i, 1);
-        polygon_i -= 1;
-    }
-    
-    for (var vx_set of polygons_vxs) polygons.push(new Polygon(vx_set));
-}
-
 function mouse_up(x: number, y: number): void {
     mouse_is_down = false;
     old_pan_offset_x += pan_offset_x;
@@ -591,58 +466,17 @@ function mouse_up(x: number, y: number): void {
     pan_offset_y = 0;
     
     if (!panned) {
-        if (hovered_vertex != undefined) {
-            if (selected_vertex == undefined) {
-                selected_vertex = hovered_vertex;
-            } else {
-                cut_polygons();
-                selected_vertex = undefined;
-                hovered_vertex = undefined;
-            }
-        } else if (hovered_edge != undefined) {
-            let polygon1_i: number = undefined;
-            let polygon2_i: number = undefined;
-            let v1i: number = undefined;
-            let v2i: number = undefined;
-            
-            for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-                let vxs = polygons[polygon_i].vertices;
-                for (let vertex_i = 0; vertex_i < vxs.length; vertex_i += 1) {
-                    let vx1 = vxs[vertex_i];
-                    let vx2 = vxs[(vertex_i + 1) % vxs.length];
-                    
-                    if (same_edge(hovered_edge, {v1: vx1, v2: vx2})) {
-                        if (polygon1_i == undefined) {
-                            polygon1_i = polygon_i;
-                            v1i = vertex_i;
-                        } else {
-                            polygon2_i = polygon_i;
-                            v2i = vertex_i;
-                            break;
-                        }
-                    }
-                }
-                if (polygon2_i != undefined) break;
-            }
-            
-            if (polygon2_i != undefined) unite_polygons(polygon1_i, polygon2_i, v1i, v2i);
+        if (selected_polygon_i == undefined) {
+            selected_polygon_i = hovered_polygon_i;
         } else {
-            if (closest_edge != undefined) {
-                if (candidate_polygon != undefined) {
-                    polygons.push(candidate_polygon);
-                    candidate_polygon = undefined;
-                }
-            }
-            
-            if (hovered_polygon != undefined) {
-                for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-                    if (polygons[polygon_i] === hovered_polygon) {
-                        polygons.splice(polygon_i, 1);
-                        
-                        hovered_polygon = undefined;
-                        break;
-                    }
-                }
+            if (selected_polygon_i == hovered_polygon_i) {
+                hovered_polygon_i = undefined;
+                selected_polygon_i = undefined;
+            } else if (polygons[selected_polygon_i].polygon_template == polygons[hovered_polygon_i].polygon_template) {
+                polygons.splice(selected_polygon_i, 1);
+                polygons.splice(hovered_polygon_i, 1);
+                hovered_polygon_i = undefined;
+                selected_polygon_i = undefined;
             }
         }
     }
@@ -669,35 +503,6 @@ function point_inside_polygon(point: Vector, polygon: Polygon): boolean {
     return true;
 }
 
-// Takes indices of two polygons in the polygons array, gets rid of both, pushes their union. 
-// Assumes that polygon1_i < polygon2_i.
-function unite_polygons(polygon1_i: number, polygon2_i: number, v1i: number, v2i: number): void {
-    let p1 = polygons[polygon1_i];
-    let p2 = polygons[polygon2_i];
-    polygons.splice(polygon2_i, 1);
-    polygons.splice(polygon1_i, 1);
-    
-    let new_polygon_vxs = [];
-    
-    for (let v_i = (v1i + 1) % p1.vertices.length; v_i != v1i; v_i = (v_i + 1) % p1.vertices.length) {
-        new_polygon_vxs.push(p1.vertices[v_i]);
-    }
-    
-    for (let v_i = (v2i + 1) % p2.vertices.length; v_i != v2i; v_i = (v_i + 1) % p2.vertices.length) {
-        new_polygon_vxs.push(p2.vertices[v_i]);
-    }
-    
-    if (point_is_on_line(new_polygon_vxs[p1.vertices.length], new_polygon_vxs[p1.vertices.length - 2], new_polygon_vxs[p1.vertices.length - 1])) {
-        new_polygon_vxs.splice(p1.vertices.length - 1, 1);
-    }
-    
-    if (point_is_on_line(new_polygon_vxs[new_polygon_vxs.length - 1], new_polygon_vxs[1], new_polygon_vxs[0])) {
-        new_polygon_vxs.splice(0, 1);
-    }
-    
-    polygons.push(new Polygon(new_polygon_vxs));
-}
-
 // The Euclid distance between two points.
 function euclid(p1: Vector, p2: Vector):number {
     return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
@@ -722,118 +527,23 @@ function mouse_move(x: number, y: number): void {
         pan_offset_y = y - mouse_down_pos[1];
         panned = true;
     }
-    
     mouse_world_coord = canvas_to_world({x: x, y: y});
     
-    let found_hovered_vertex = false;
-    
-    // This variable lets us keep the priorities: if we hover next to a vertex, we don't care about anything else.
-    // If we hover next to an edge, we don't care about polygons and free edges.
-    // If we hover over a polygon, we don't need to find a free edge to add a polygon to.
-    let found: boolean = false;
-    
+    // Hovering above a polygon?
+    let found = false;
     for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-        // Hovering next to a vertex?
-        for (var vertex of polygons[polygon_i].vertices) {
-            if (euclid(vertex, mouse_world_coord) < 10 / unit_pix) {
-                hovered_vertex = vertex;
-                hovered_edge = undefined;
-                hovered_polygon = undefined;
-                found_hovered_vertex = true;
-                candidate_polygon = undefined;
-                found = true;
-                break;
-            }
-        }
-        
-        if (!found) {
-            // Hovering next to an edge? 
-            for (let vx_i = 0; vx_i < polygons[polygon_i].vertices.length; vx_i += 1) {
-                let vertex = polygons[polygon_i].vertices[vx_i];
-                let vertex2 = polygons[polygon_i].vertices[(vx_i + 1) % polygons[polygon_i].vertices.length];
-                if (distance_to_segment(vertex, vertex2, mouse_world_coord) < 10 / unit_pix) {
-                    hovered_polygon = undefined;
-                    hovered_edge = {v1: vertex, v2: vertex2};
-                    found = true;
-                    break;
-                }
-            }
-        }
-        
-        // Hovering above a polygon?
-        if (!found && point_inside_polygon(mouse_world_coord, polygons[polygon_i])) {
-            hovered_vertex = undefined;
-            hovered_edge = undefined;
-            hovered_polygon = polygons[polygon_i];
-            closest_edge = undefined;
+        if (point_inside_polygon(mouse_world_coord, polygons[polygon_i])) {
+            hovered_polygon_i = polygon_i;
             found = true;
-            candidate_polygon = undefined;
             break;
         }
     }
     
-    if (!found) {
-        // Find the closest edge to the cursor, so that we can add a polygon to it.
-        hovered_polygon = undefined;
-        hovered_vertex = undefined;
-        hovered_edge = undefined;
-        let min_dist = Number.MAX_VALUE;
-        let new_edge: Edge = undefined;
-        let new_base: Polygon = undefined;
-        for (var polygon of polygons) {
-            for (let vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
-                let dist = euclid(mouse_world_coord, polygon.vertices[vx_i]) + euclid(mouse_world_coord, polygon.vertices[(vx_i + 1) % polygon.vertices.length]);
-                if (min_dist > dist) {
-                    min_dist = dist;
-                    new_edge = {v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length]};
-                    new_base = polygon;
-                }
-                // TODO: Check that the cursor projects onto the edge.
-            }
-        }
-        
-        if (closest_edge == undefined || !same_edge(new_edge, closest_edge) || candidate_polygon == undefined) {
-            candidate_polygon = undefined;
-            closest_edge = new_edge;
-            base_polygon = new_base;
-            for (candidate_edge_i = 0; candidate_edge_i < current_template.vertices.length; candidate_edge_i += 1) {
-                if (create_candidate_polygon(closest_edge, base_polygon, current_template, candidate_edge_i)) break;
-            }
-        }
-    }
-    
-    if (!found_hovered_vertex) hovered_vertex = undefined;
-}
-
-// Rotating the polygon clockwise
-function e_down() {
-    // If the candidate polygon is defined, then there is candidate_edge_i that works. 
-    // Therefore, there will be no infiinte loop. Worst case: it makes a full circle, 
-    // comes back to the current value and terminates.
-    if (candidate_polygon == undefined) return;
-    
-    while (true) {
-        candidate_edge_i += 1;
-        if (candidate_edge_i == current_template.vertices.length) candidate_edge_i = 0;
-        if (create_candidate_polygon(closest_edge, base_polygon, current_template, candidate_edge_i)) break;
-    }
-}
-
-// Rotating the polygon counter-clockwise
-function q_down() {
-    if (candidate_polygon == undefined) return;
-    
-    while (true) {
-        candidate_edge_i -= 1;
-        if (candidate_edge_i == -1) candidate_edge_i = current_template.vertices.length - 1;
-        if (create_candidate_polygon(closest_edge, base_polygon, current_template, candidate_edge_i)) break;
-    }
+    if (!found) hovered_polygon_i = undefined;
 }
 
 function space_down(): void {
-    if (hovered_polygon != undefined) {
-        current_template = {vertices: hovered_polygon.vertices};
-    }
+    
 }
 
 function mouse_scroll(direction: number): void {
