@@ -1,0 +1,5 @@
+canvas.ts
+game.ts
+input.ts
+loop.ts
+utils.ts
