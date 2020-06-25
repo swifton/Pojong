@@ -15,9 +15,9 @@ function dot(vec_1, vec_2) {
     return vec_1.x * vec_2.x + vec_1.y * vec_2.y;
 }
 var Polygon = /** @class */ (function () {
-    function Polygon(vertices, polygon_template) {
+    function Polygon(vertices, template_i) {
         this.vertices = vertices;
-        this.polygon_template = polygon_template;
+        this.template_i = template_i;
         this.center = { x: 0, y: 0 };
         for (var _i = 0, vertices_1 = vertices; _i < vertices_1.length; _i++) {
             var vertex = vertices_1[_i];
@@ -233,7 +233,8 @@ function transform(point, transformation) {
 }
 // Tries to construct a polygon from a given template on the given edge, returns whether it was successful.
 // starting_vx_i is the first vertex of the edge that needs to be matched.
-function add_polygon(edge, base, polygon_template) {
+function add_polygon(edge, base, template_i) {
+    var polygon_template = templates[template_i];
     var starting_vx_i = 0;
     if (starting_vx_i < 0 || starting_vx_i >= polygon_template.vertices.length) {
         console.log("ERROR: Invalid starting vertex index.");
@@ -313,7 +314,7 @@ function add_polygon(edge, base, polygon_template) {
             }
         }
     }
-    var new_polygon = new Polygon(polygon_vertices, polygon_template);
+    var new_polygon = new Polygon(polygon_vertices, template_i);
     // Checking that edges of the new polygon don't intersect with edges 
     // of existing polygons.
     for (var v1_i = 0; v1_i < new_polygon.vertices.length; v1_i += 1) {
@@ -344,13 +345,13 @@ function add_polygon(edge, base, polygon_template) {
 }
 function create_foam() {
     polygons = [];
-    add_polygon(first_edge, undefined, triangle_template);
+    add_polygon(first_edge, undefined, 0);
     for (var polygon_i = 0; polygon_i < 1000; polygon_i += 1) {
         var polygon_i_1 = random_integer(0, polygons.length);
         var polygon = polygons[polygon_i_1].vertices;
         var vx_i = random_integer(0, polygon.length);
         var edge = { v1: polygon[vx_i], v2: polygon[(vx_i + 1) % polygon.length] };
-        add_polygon(edge, polygons[polygon_i_1], templates[random_integer(0, templates.length)]);
+        add_polygon(edge, polygons[polygon_i_1], random_integer(0, templates.length));
     }
 }
 function mouse_down(x, y) {
@@ -388,7 +389,7 @@ function mouse_up(x, y) {
                 hovered_polygon_i = undefined;
                 selected_polygon_i = undefined;
             }
-            else if (polygons[selected_polygon_i].polygon_template == polygons[hovered_polygon_i].polygon_template) {
+            else if (polygons[selected_polygon_i].template_i == polygons[hovered_polygon_i].template_i) {
                 polygons.splice(selected_polygon_i, 1);
                 polygons.splice(hovered_polygon_i, 1);
                 hovered_polygon_i = undefined;
