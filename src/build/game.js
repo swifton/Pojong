@@ -64,7 +64,8 @@ var octagon_template = { vertices: [{ x: 0, y: 0 },
 var prism_template = { vertices: [{ x: 0, y: 0 },
         { x: 0.5, y: Math.sqrt(3) / 2 },
         { x: 1.5, y: Math.sqrt(3) / 2 },
-        { x: 2, y: 0 }] };
+        { x: 2, y: 0 },
+        { x: 1, y: 0 }] };
 var rhombus_template = { vertices: [{ x: 0, y: 0 }, { x: 0.5, y: Math.sqrt(3) / 2 }, { x: 1.5, y: Math.sqrt(3) / 2 }, { x: 1, y: 0 }] };
 var antitriangle_template = { vertices: [{ x: 0, y: 0 },
         { x: 0.5, y: Math.sqrt(3) / 2 },

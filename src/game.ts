@@ -98,7 +98,8 @@ let octagon_template: Polygon_Template = {vertices: [{x: 0, y: 0},
 let prism_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
                                                    {x: 0.5, y: Math.sqrt(3)/2}, 
                                                    {x: 1.5, y: Math.sqrt(3)/2}, 
-                                                   {x: 2, y: 0}]};
+                                                   {x: 2, y: 0},
+                                                   {x: 1, y: 0}]};
 
 let rhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0}, {x: 0.5, y: Math.sqrt(3)/2}, {x: 1.5, y: Math.sqrt(3)/2}, {x: 1, y: 0}]};
 
