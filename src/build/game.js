@@ -18,6 +18,7 @@ var Polygon = /** @class */ (function () {
     function Polygon(vertices, template_i) {
         this.vertices = vertices;
         this.template_i = template_i;
+        this.free = false;
         this.center = { x: 0, y: 0 };
         for (var _i = 0, vertices_1 = vertices; _i < vertices_1.length; _i++) {
             var vertex = vertices_1[_i];
@@ -149,7 +150,12 @@ function render() {
     // Drawing polygons
     for (var polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
         var polygon = polygons[polygon_i];
-        draw_polygon(polygon, colors[polygon.template_i], 1);
+        var alpha = void 0;
+        if (polygon.free)
+            alpha = 1;
+        else
+            alpha = 0.3;
+        draw_polygon(polygon, colors[polygon.template_i], alpha);
     }
     if (hovered_polygon_i != undefined)
         draw_polygon(polygons[hovered_polygon_i], "red", 1);
@@ -342,6 +348,33 @@ function create_foam() {
         var vx_i = random_integer(0, polygon.length);
         var edge = { v1: polygon[vx_i], v2: polygon[(vx_i + 1) % polygon.length] };
         add_polygon(edge, polygons[polygon_i_1], random_integer(0, templates.length));
+    }
+    update_polygons_freeness();
+}
+function update_polygons_freeness() {
+    for (var _i = 0, polygons_3 = polygons; _i < polygons_3.length; _i++) {
+        var polygon = polygons_3[_i];
+        var n_occupied_edges = 0;
+        for (var vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
+            for (var _a = 0, polygons_4 = polygons; _a < polygons_4.length; _a++) {
+                var other_polygon = polygons_4[_a];
+                if (other_polygon == polygon)
+                    continue;
+                for (var other_vx_i = 0; other_vx_i < other_polygon.vertices.length; other_vx_i += 1) {
+                    var vx1 = polygon.vertices[vx_i];
+                    var vx2 = polygon.vertices[(vx_i + 1) % polygon.vertices.length];
+                    var other_vx1 = other_polygon.vertices[other_vx_i];
+                    var other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
+                    if (same_edge({ v1: vx1, v2: vx2 }, { v1: other_vx1, v2: other_vx2 })) {
+                        n_occupied_edges += 1;
+                    }
+                }
+            }
+        }
+        if (n_occupied_edges > polygon.vertices.length / 2)
+            polygon.free = false;
+        else
+            polygon.free = true;
     }
 }
 function mouse_down(x, y) {

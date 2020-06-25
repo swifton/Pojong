@@ -42,6 +42,7 @@ interface Transformation {
 
 class Polygon {
     center: Vector;
+    free: boolean = false;
     
 	constructor(public vertices: Vector[], public template_i: number) {
 		this.center = {x: 0, y: 0}
@@ -204,7 +205,12 @@ function render() {
 	// Drawing polygons
 	for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
 		let polygon = polygons[polygon_i];
-        draw_polygon(polygon, colors[polygon.template_i], 1);
+        
+        let alpha: number;
+        if (polygon.free) alpha = 1;
+        else alpha = 0.3;
+        
+        draw_polygon(polygon, colors[polygon.template_i], alpha);
     }
 	
     if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "red", 1);
@@ -421,6 +427,33 @@ function create_foam() {
         let vx_i = random_integer(0, polygon.length);
         let edge: Edge = {v1: polygon[vx_i], v2: polygon[(vx_i + 1) % polygon.length]};
         add_polygon(edge, polygons[polygon_i], random_integer(0, templates.length));
+    }
+    
+    update_polygons_freeness()
+}
+
+function update_polygons_freeness() {
+    for (let polygon of polygons) {
+        let n_occupied_edges: number = 0;
+        
+        for (let vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
+            for (let other_polygon of polygons) {
+                if (other_polygon == polygon) continue;
+                for (let other_vx_i = 0; other_vx_i < other_polygon.vertices.length; other_vx_i += 1) {
+                    let vx1 = polygon.vertices[vx_i];
+                    let vx2 = polygon.vertices[(vx_i + 1) % polygon.vertices.length];
+                    let other_vx1 = other_polygon.vertices[other_vx_i];
+                    let other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
+                    
+                    if (same_edge({v1: vx1, v2: vx2}, {v1: other_vx1, v2: other_vx2})) {
+                        n_occupied_edges += 1;
+                    }
+                }
+            }
+        }
+        
+        if (n_occupied_edges > polygon.vertices.length / 2) polygon.free = false;
+        else polygon.free = true;
     }
 }
 
