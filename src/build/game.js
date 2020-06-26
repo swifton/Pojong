@@ -284,28 +284,28 @@ function add_polygon(edge, base, template_i) {
                     // This code checks that the new polygon won't intersect with old polygons. This code is difficult to understand, 
                     // maintain and debug. It should be replaced with something else.
                     if (point_is_on_inner_side(this_prev, this_vx, that_prev) && point_is_on_inner_side(this_vx, this_next, that_prev)) {
-                        console.log("Vertex collision 1");
+                        //console.log("Vertex collision 1"); 
                         if (!same_vertex(this_prev, that_prev) && !same_vertex(this_next, that_prev))
                             return false;
-                        console.log("Exit prevented.");
+                        //console.log("Exit prevented."); 
                     }
                     if (point_is_on_inner_side(this_prev, this_vx, that_next) && point_is_on_inner_side(this_vx, this_next, that_next)) {
-                        console.log("Vertex collision 2");
+                        //console.log("Vertex collision 2");
                         if (!same_vertex(this_prev, that_next) && !same_vertex(this_next, that_next))
                             return false;
-                        console.log("Exit prevented.");
+                        //console.log("Exit prevented."); 
                     }
                     if (point_is_on_inner_side(that_prev, that_vx, this_prev) && point_is_on_inner_side(that_vx, that_next, this_prev)) {
-                        console.log("Vertex collision 3");
+                        //console.log("Vertex collision 3"); 
                         if (!same_vertex(that_prev, this_prev) && !same_vertex(that_next, this_prev))
                             return false;
-                        console.log("Exit prevented.");
+                        //console.log("Exit prevented."); 
                     }
                     if (point_is_on_inner_side(that_prev, that_vx, this_next) && point_is_on_inner_side(that_vx, that_next, this_next)) {
-                        console.log("Vertex collision 4");
+                        //console.log("Vertex collision 4"); 
                         if (!same_vertex(that_prev, this_next) && !same_vertex(that_next, this_next))
                             return false;
-                        console.log("Exit prevented.");
+                        //console.log("Exit prevented."); 
                     }
                 }
             }
@@ -325,57 +325,69 @@ function add_polygon(edge, base, template_i) {
                 var v4 = old_polygon.vertices[(v3_i + 1) % old_polygon.vertices.length];
                 var old_edge_to_check = { v1: v3, v2: v4 };
                 if (edges_intersect(edge_to_check, old_edge_to_check)) {
-                    console.log("Polygon " + polygon_i + " is in the way.");
+                    //console.log("Polygon " + polygon_i + " is in the way.");
                     if (!same_vertex(edge_to_check.v1, old_edge_to_check.v1) &&
                         !same_vertex(edge_to_check.v1, old_edge_to_check.v2) &&
                         !same_vertex(edge_to_check.v2, old_edge_to_check.v1) &&
                         !same_vertex(edge_to_check.v2, old_edge_to_check.v2))
                         return false;
-                    console.log("Exit prevented.");
+                    //console.log("Exit prevented."); 
                 }
             }
         }
     }
     polygons.push(new_polygon);
-    console.log("Success!");
+    //console.log("Success!");
     return true;
 }
 function create_foam() {
     polygons = [];
     add_polygon(first_edge, undefined, 0);
-    for (var polygon_i = 0; polygon_i < 1000; polygon_i += 1) {
-        var polygon_i_1 = random_integer(0, polygons.length);
-        var polygon = polygons[polygon_i_1].vertices;
-        var vx_i = random_integer(0, polygon.length);
-        var edge = { v1: polygon[vx_i], v2: polygon[(vx_i + 1) % polygon.length] };
-        add_polygon(edge, polygons[polygon_i_1], random_integer(0, templates.length));
+    for (var i = 0; i < 50; i += 1) {
+        var template_i = random_integer(0, templates.length);
+        var old_length = polygons.length;
+        while (polygons.length < old_length + 2) {
+            var polygon_i = random_integer(0, polygons.length);
+            var polygon = polygons[polygon_i];
+            var vx_i = random_integer(0, polygon.vertices.length);
+            var edge = { v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length] };
+            add_polygon(edge, polygons[polygon_i], template_i);
+        }
+        update_polygon_freeness(polygons[polygons.length - 2]);
+        update_polygon_freeness(polygons[polygons.length - 1]);
+        if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
+            polygons.splice(polygons.length - 2, 2);
+        }
     }
     update_polygons_freeness();
 }
-function update_polygons_freeness() {
-    for (var _i = 0, polygons_3 = polygons; _i < polygons_3.length; _i++) {
-        var polygon = polygons_3[_i];
-        var n_occupied_edges = 0;
-        for (var vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
-            for (var _a = 0, polygons_4 = polygons; _a < polygons_4.length; _a++) {
-                var other_polygon = polygons_4[_a];
-                if (other_polygon == polygon)
-                    continue;
-                for (var other_vx_i = 0; other_vx_i < other_polygon.vertices.length; other_vx_i += 1) {
-                    var vx1 = polygon.vertices[vx_i];
-                    var vx2 = polygon.vertices[(vx_i + 1) % polygon.vertices.length];
-                    var other_vx1 = other_polygon.vertices[other_vx_i];
-                    var other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
-                    if (same_edge({ v1: vx1, v2: vx2 }, { v1: other_vx1, v2: other_vx2 })) {
-                        n_occupied_edges += 1;
-                    }
+function update_polygon_freeness(polygon) {
+    var n_occupied_edges = 0;
+    for (var vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
+        for (var _i = 0, polygons_3 = polygons; _i < polygons_3.length; _i++) {
+            var other_polygon = polygons_3[_i];
+            if (other_polygon == polygon)
+                continue;
+            for (var other_vx_i = 0; other_vx_i < other_polygon.vertices.length; other_vx_i += 1) {
+                var vx1 = polygon.vertices[vx_i];
+                var vx2 = polygon.vertices[(vx_i + 1) % polygon.vertices.length];
+                var other_vx1 = other_polygon.vertices[other_vx_i];
+                var other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
+                if (same_edge({ v1: vx1, v2: vx2 }, { v1: other_vx1, v2: other_vx2 })) {
+                    n_occupied_edges += 1;
                 }
             }
         }
-        if (n_occupied_edges > polygon.vertices.length / 2)
-            polygon.free = false;
-        else
-            polygon.free = true;
+    }
+    if (n_occupied_edges > polygon.vertices.length / 2)
+        polygon.free = false;
+    else
+        polygon.free = true;
+}
+function update_polygons_freeness() {
+    for (var _i = 0, polygons_4 = polygons; _i < polygons_4.length; _i++) {
+        var polygon = polygons_4[_i];
+        update_polygon_freeness(polygon);
     }
 }
 function mouse_down(x, y) {
