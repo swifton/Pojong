@@ -43,6 +43,7 @@ interface Transformation {
 class Polygon {
     center: Vector;
     free: boolean = false;
+    n_blocked_edges: number;
     
 	constructor(public vertices: Vector[], public template_i: number) {
 		this.center = {x: 0, y: 0}
@@ -141,7 +142,8 @@ let antirhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0},
                                                          {x: 1, y: 0}]};
 
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
-let templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template];
+//let templates = [triangle_template, rhombus_template, trapezoid_template];
+let templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template, antirhombus_template];
 let colors = ["red", "green", "orange", "cyan", "yellow", "blue", "magenta", "white", "black", "brown"];
 
 function step() {
@@ -448,14 +450,18 @@ function create_foam() {
         let template_i = random_integer(0, templates.length);
         
         let old_length = polygons.length;
+        // Find spots for two polygons of the same type
         while (polygons.length < old_length + 2) {
             let polygon_i = random_integer(0, polygons.length);
             let polygon = polygons[polygon_i];
             let vx_i = random_integer(0, polygon.vertices.length);
             let edge: Edge = {v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length]};
             add_polygon(edge, polygons[polygon_i], template_i);
+            update_polygon_freeness(polygons[polygons.length - 1]);
+            if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1) polygons.splice(polygons.length - 1, 1);
         }
         
+        // Check if both of them are free. If not, start over.
         update_polygon_freeness(polygons[polygons.length - 2]);
         update_polygon_freeness(polygons[polygons.length - 1]);
         if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
@@ -467,7 +473,7 @@ function create_foam() {
 }
 
 function update_polygon_freeness(polygon: Polygon): void {
-    let n_occupied_edges: number = 0;
+    let n_blocked_edges: number = 0;
     
     for (let vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
         for (let other_polygon of polygons) {
@@ -479,14 +485,15 @@ function update_polygon_freeness(polygon: Polygon): void {
                 let other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
                 
                 if (same_edge({v1: vx1, v2: vx2}, {v1: other_vx1, v2: other_vx2})) {
-                    n_occupied_edges += 1;
+                    n_blocked_edges += 1;
                 }
             }
         }
     }
     
-    if (n_occupied_edges > Math.floor(polygon.vertices.length / 2)) polygon.free = false;
-    else polygon.free = true;
+    polygon.n_blocked_edges = n_blocked_edges;
+    if (n_blocked_edges < polygon.vertices.length - n_blocked_edges) polygon.free = true;
+    else polygon.free = false;
 }
 
 function update_polygons_freeness() {

@@ -101,7 +101,8 @@ var antirhombus_template = { vertices: [{ x: 0, y: 0 },
         { x: 1.5, y: -Math.sqrt(3) / 2 },
         { x: 1, y: 0 }] };
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
-var templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template];
+//let templates = [triangle_template, rhombus_template, trapezoid_template];
+var templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template, antirhombus_template];
 var colors = ["red", "green", "orange", "cyan", "yellow", "blue", "magenta", "white", "black", "brown"];
 function step() {
     render();
@@ -366,13 +367,18 @@ function create_foam() {
     for (var i = 0; i < 50; i += 1) {
         var template_i = random_integer(0, templates.length);
         var old_length = polygons.length;
+        // Find spots for two polygons of the same type
         while (polygons.length < old_length + 2) {
             var polygon_i = random_integer(0, polygons.length);
             var polygon = polygons[polygon_i];
             var vx_i = random_integer(0, polygon.vertices.length);
             var edge = { v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length] };
             add_polygon(edge, polygons[polygon_i], template_i);
+            update_polygon_freeness(polygons[polygons.length - 1]);
+            if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1)
+                polygons.splice(polygons.length - 1, 1);
         }
+        // Check if both of them are free. If not, start over.
         update_polygon_freeness(polygons[polygons.length - 2]);
         update_polygon_freeness(polygons[polygons.length - 1]);
         if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
@@ -382,7 +388,7 @@ function create_foam() {
     update_polygons_freeness();
 }
 function update_polygon_freeness(polygon) {
-    var n_occupied_edges = 0;
+    var n_blocked_edges = 0;
     for (var vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
         for (var _i = 0, polygons_3 = polygons; _i < polygons_3.length; _i++) {
             var other_polygon = polygons_3[_i];
@@ -394,15 +400,16 @@ function update_polygon_freeness(polygon) {
                 var other_vx1 = other_polygon.vertices[other_vx_i];
                 var other_vx2 = other_polygon.vertices[(other_vx_i + 1) % other_polygon.vertices.length];
                 if (same_edge({ v1: vx1, v2: vx2 }, { v1: other_vx1, v2: other_vx2 })) {
-                    n_occupied_edges += 1;
+                    n_blocked_edges += 1;
                 }
             }
         }
     }
-    if (n_occupied_edges > Math.floor(polygon.vertices.length / 2))
-        polygon.free = false;
-    else
+    polygon.n_blocked_edges = n_blocked_edges;
+    if (n_blocked_edges < polygon.vertices.length - n_blocked_edges)
         polygon.free = true;
+    else
+        polygon.free = false;
 }
 function update_polygons_freeness() {
     for (var _i = 0, polygons_4 = polygons; _i < polygons_4.length; _i++) {
