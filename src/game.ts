@@ -453,6 +453,7 @@ function create_foam() {
         
         let old_length = polygons.length;
         // Find spots for two polygons of the same type
+        let max_iterations = 100;
         while (polygons.length < old_length + 2) {
             let polygon_i = random_integer(0, polygons.length);
             let polygon = polygons[polygon_i];
@@ -461,6 +462,12 @@ function create_foam() {
             add_polygon(edge, polygons[polygon_i], template_i);
             update_polygon_freeness(polygons[polygons.length - 1]);
             if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1) polygons.splice(polygons.length - 1, 1);
+            
+            max_iterations -= 1;
+            if (max_iterations == 0) {
+                if (polygons.length > old_length) polygons.splice(polygons.length - 1, 1);
+                break;
+            }
         }
         
         // Check if both of them are free. If not, start over.
@@ -470,6 +477,8 @@ function create_foam() {
             polygons.splice(polygons.length - 2, 2);
         }
     }
+    
+    console.log(polygons.length);
     
     update_polygons_freeness();
     
@@ -544,19 +553,21 @@ function mouse_up(x: number, y: number): void {
         if (selected_polygon_i == undefined) {
             selected_polygon_i = hovered_polygon_i;
         } else {
-            if (selected_polygon_i == hovered_polygon_i) {
-                hovered_polygon_i = undefined;
-                selected_polygon_i = undefined;
-            } else if (polygons[selected_polygon_i].template_i == polygons[hovered_polygon_i].template_i) {
-                undo_stack.push(JSON.parse(JSON.stringify(polygons)));
-                
-                let polygon1_i = Math.min(selected_polygon_i, hovered_polygon_i);
-                let polygon2_i = Math.max(selected_polygon_i, hovered_polygon_i);
-                polygons.splice(polygon2_i, 1);
-                polygons.splice(polygon1_i, 1);
-                hovered_polygon_i = undefined;
-                selected_polygon_i = undefined;
-                update_polygons_freeness();
+            if (hovered_polygon_i != undefined) {
+                if (selected_polygon_i == hovered_polygon_i) {
+                    hovered_polygon_i = undefined;
+                    selected_polygon_i = undefined;
+                } else if (polygons[selected_polygon_i].template_i == polygons[hovered_polygon_i].template_i) {
+                    undo_stack.push(JSON.parse(JSON.stringify(polygons)));
+                    
+                    let polygon1_i = Math.min(selected_polygon_i, hovered_polygon_i);
+                    let polygon2_i = Math.max(selected_polygon_i, hovered_polygon_i);
+                    polygons.splice(polygon2_i, 1);
+                    polygons.splice(polygon1_i, 1);
+                    hovered_polygon_i = undefined;
+                    selected_polygon_i = undefined;
+                    update_polygons_freeness();
+                }
             }
         }
     }
