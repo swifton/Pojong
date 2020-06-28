@@ -75,9 +75,21 @@ let selected_polygon_i: number = undefined;
 let base_polygon: Polygon = undefined;
 let to_add_type = 3;
 
-let triangle_template: Polygon_Template = {vertices: [{x: 0, y: 0}, {x: 0.5, y: Math.sqrt(3)/2}, {x: 1, y: 0}]};
+let triangle_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                      {x: 0.5, y: Math.sqrt(3)/2}, 
+                                                      {x: 1, y: 0}]};
 
-let square_template: Polygon_Template = {vertices: [{x: 0, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 0}]};
+let big_triangle_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                          {x: 0.5, y: Math.sqrt(3)/2}, 
+                                                          {x: 1, y: 2*Math.sqrt(3)/2}, 
+                                                          {x: 1.5, y: Math.sqrt(3)/2}, 
+                                                          {x: 2, y: 0}, 
+                                                          {x: 1, y: 0}]};
+
+let square_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                    {x: 0, y: 1}, 
+                                                    {x: 1, y: 1}, 
+                                                    {x: 1, y: 0}]};
 
 let hexagon_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
                                                      {x: 0.5, y: Math.sqrt(3)/2}, 
@@ -95,13 +107,23 @@ let octagon_template: Polygon_Template = {vertices: [{x: 0, y: 0},
                                                      {x: 1 + Math.sqrt(2) / 2, y: -Math.sqrt(2) / 2}, 
                                                      {x: Math.sqrt(2) / 2, y: -Math.sqrt(2) / 2}]};
 
-let prism_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
-                                                   {x: 0.5, y: Math.sqrt(3)/2}, 
-                                                   {x: 1.5, y: Math.sqrt(3)/2}, 
-                                                   {x: 2, y: 0},
-                                                   {x: 1, y: 0}]};
+let trapezoid_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                       {x: 0.5, y: Math.sqrt(3)/2}, 
+                                                       {x: 1.5, y: Math.sqrt(3)/2}, 
+                                                       {x: 2, y: 0},
+                                                       {x: 1, y: 0}]};
 
-let rhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0}, {x: 0.5, y: Math.sqrt(3)/2}, {x: 1.5, y: Math.sqrt(3)/2}, {x: 1, y: 0}]};
+let parallelogram_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                           {x: 0.5, y: Math.sqrt(3)/2}, 
+                                                           {x: 1.5, y: Math.sqrt(3)/2}, 
+                                                           {x: 2.5, y: Math.sqrt(3)/2}, 
+                                                           {x: 2, y: 0},
+                                                           {x: 1, y: 0}]};
+
+let rhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
+                                                     {x: 0.5, y: Math.sqrt(3)/2}, 
+                                                     {x: 1.5, y: Math.sqrt(3)/2}, 
+                                                     {x: 1, y: 0}]};
 
 let antitriangle_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
                                                           {x: 0.5, y: Math.sqrt(3)/2}, 
@@ -119,7 +141,7 @@ let antirhombus_template: Polygon_Template = {vertices: [{x: 0, y: 0},
                                                          {x: 1, y: 0}]};
 
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
-let templates = [triangle_template, hexagon_template, rhombus_template, prism_template, antirhombus_template];
+let templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template];
 let colors = ["red", "green", "orange", "cyan", "yellow", "blue", "magenta", "white", "black", "brown"];
 
 function step() {
@@ -463,7 +485,7 @@ function update_polygon_freeness(polygon: Polygon): void {
         }
     }
     
-    if (n_occupied_edges > polygon.vertices.length / 2) polygon.free = false;
+    if (n_occupied_edges > Math.floor(polygon.vertices.length / 2)) polygon.free = false;
     else polygon.free = true;
 }
 

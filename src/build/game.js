@@ -45,8 +45,19 @@ var hovered_polygon_i = undefined;
 var selected_polygon_i = undefined;
 var base_polygon = undefined;
 var to_add_type = 3;
-var triangle_template = { vertices: [{ x: 0, y: 0 }, { x: 0.5, y: Math.sqrt(3) / 2 }, { x: 1, y: 0 }] };
-var square_template = { vertices: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 0 }] };
+var triangle_template = { vertices: [{ x: 0, y: 0 },
+        { x: 0.5, y: Math.sqrt(3) / 2 },
+        { x: 1, y: 0 }] };
+var big_triangle_template = { vertices: [{ x: 0, y: 0 },
+        { x: 0.5, y: Math.sqrt(3) / 2 },
+        { x: 1, y: 2 * Math.sqrt(3) / 2 },
+        { x: 1.5, y: Math.sqrt(3) / 2 },
+        { x: 2, y: 0 },
+        { x: 1, y: 0 }] };
+var square_template = { vertices: [{ x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 1, y: 0 }] };
 var hexagon_template = { vertices: [{ x: 0, y: 0 },
         { x: 0.5, y: Math.sqrt(3) / 2 },
         { x: 1.5, y: Math.sqrt(3) / 2 },
@@ -61,12 +72,21 @@ var octagon_template = { vertices: [{ x: 0, y: 0 },
         { x: 1 + Math.sqrt(2), y: 0 },
         { x: 1 + Math.sqrt(2) / 2, y: -Math.sqrt(2) / 2 },
         { x: Math.sqrt(2) / 2, y: -Math.sqrt(2) / 2 }] };
-var prism_template = { vertices: [{ x: 0, y: 0 },
+var trapezoid_template = { vertices: [{ x: 0, y: 0 },
         { x: 0.5, y: Math.sqrt(3) / 2 },
         { x: 1.5, y: Math.sqrt(3) / 2 },
         { x: 2, y: 0 },
         { x: 1, y: 0 }] };
-var rhombus_template = { vertices: [{ x: 0, y: 0 }, { x: 0.5, y: Math.sqrt(3) / 2 }, { x: 1.5, y: Math.sqrt(3) / 2 }, { x: 1, y: 0 }] };
+var parallelogram_template = { vertices: [{ x: 0, y: 0 },
+        { x: 0.5, y: Math.sqrt(3) / 2 },
+        { x: 1.5, y: Math.sqrt(3) / 2 },
+        { x: 2.5, y: Math.sqrt(3) / 2 },
+        { x: 2, y: 0 },
+        { x: 1, y: 0 }] };
+var rhombus_template = { vertices: [{ x: 0, y: 0 },
+        { x: 0.5, y: Math.sqrt(3) / 2 },
+        { x: 1.5, y: Math.sqrt(3) / 2 },
+        { x: 1, y: 0 }] };
 var antitriangle_template = { vertices: [{ x: 0, y: 0 },
         { x: 0.5, y: Math.sqrt(3) / 2 },
         { x: 1.5, y: Math.sqrt(3) / 2 },
@@ -81,7 +101,7 @@ var antirhombus_template = { vertices: [{ x: 0, y: 0 },
         { x: 1.5, y: -Math.sqrt(3) / 2 },
         { x: 1, y: 0 }] };
 //let templates = [triangle_template, square_template, hexagon_template, octagon_template];
-var templates = [triangle_template, hexagon_template, rhombus_template, prism_template, antirhombus_template];
+var templates = [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template];
 var colors = ["red", "green", "orange", "cyan", "yellow", "blue", "magenta", "white", "black", "brown"];
 function step() {
     render();
@@ -379,7 +399,7 @@ function update_polygon_freeness(polygon) {
             }
         }
     }
-    if (n_occupied_edges > polygon.vertices.length / 2)
+    if (n_occupied_edges > Math.floor(polygon.vertices.length / 2))
         polygon.free = false;
     else
         polygon.free = true;
