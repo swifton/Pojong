@@ -528,8 +528,11 @@ function point_is_on_line(vertex1: Vector, vertex2: Vector, point: Vector): bool
 
 function mouse_up(x: number, y: number): void {
     mouse_is_down = false;
+    
     old_pan_offset_x += pan_offset_x;
     old_pan_offset_y += pan_offset_y;
+    if (Math.abs(pan_offset_x) + Math.abs(pan_offset_y) < 5) panned = false;
+    
     pan_offset_x = 0;
     pan_offset_y = 0;
     
