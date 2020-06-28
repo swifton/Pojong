@@ -63,6 +63,7 @@ let unit_pix: number = 50;
 let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
 let initial_position: Polygon[] = [];
+let undo_stack: Polygon[][] = [];
 
 let mouse_down_pos: number[];
 let pan_offset_x: number = 0;
@@ -547,6 +548,8 @@ function mouse_up(x: number, y: number): void {
                 hovered_polygon_i = undefined;
                 selected_polygon_i = undefined;
             } else if (polygons[selected_polygon_i].template_i == polygons[hovered_polygon_i].template_i) {
+                undo_stack.push(JSON.parse(JSON.stringify(polygons)));
+                
                 let polygon1_i = Math.min(selected_polygon_i, hovered_polygon_i);
                 let polygon2_i = Math.max(selected_polygon_i, hovered_polygon_i);
                 polygons.splice(polygon2_i, 1);
@@ -629,6 +632,14 @@ function mouse_scroll(direction: number): void {
 
 function r_down() {
     polygons = JSON.parse(JSON.stringify(initial_position));
+    undo_stack = [];
+}
+
+function z_down() {
+    if (undo_stack.length > 0) {
+        polygons = undo_stack.pop();
+        selected_polygon_i = undefined;
+    }
 }
 
 let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};

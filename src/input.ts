@@ -10,10 +10,11 @@ function do_key_down(e: KeyboardEvent) {
     
     if (i == 32) space_down();
     if (i == 82) r_down();
-    // if (i == 81) q_down();
-    //if (i == 69) e_down();
+    if (i == 90) z_down();
     
     /*
+     if (i == 81) q_down();
+    if (i == 69) e_down();
         if (i == 37 && typeof left_key_down != "undefined") left_key_down();
         if (i == 39 && typeof right_key_down != "undefined") right_key_down();
         if (i == 38 && typeof up_key_down != "undefined") up_key_down();
@@ -26,7 +27,6 @@ function do_key_down(e: KeyboardEvent) {
         if (i == 68 && typeof d_down != "undefined") d_down();
         if (i == 70 && typeof f_down != "undefined") f_down();
         if (i == 71 && typeof g_down != "undefined") g_down();
-        if (i == 90 && typeof z_down != "undefined") z_down();
         if (i == 88 && typeof x_down != "undefined") x_down();
         if (i == 67 && typeof c_down != "undefined") c_down();
         if (i == 9 && typeof tab_down != "undefined") tab_down();
