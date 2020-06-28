@@ -238,8 +238,8 @@ function render() {
         draw_polygon(polygon, colors[polygon.template_i], alpha);
     }
 	
-    if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "red", 1);
-    if (selected_polygon_i != undefined) draw_polygon(polygons[selected_polygon_i], "red", 1);
+    if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.5);
+    if (selected_polygon_i != undefined) draw_polygon(polygons[selected_polygon_i], "gray", 0.5);
 	
 	// Visualizing the mouse position.
     //draw_point(mouse_world_coord, "red");
