@@ -62,6 +62,7 @@ let main_context = main_canvas.getContext('2d');
 let unit_pix: number = 50;
 let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
+let initial_position: Polygon[] = [];
 
 let mouse_down_pos: number[];
 let pan_offset_x: number = 0;
@@ -469,7 +470,9 @@ function create_foam() {
         }
     }
     
-    update_polygons_freeness()
+    update_polygons_freeness();
+    
+    initial_position = JSON.parse(JSON.stringify(polygons));
 }
 
 function update_polygon_freeness(polygon: Polygon): void {
@@ -622,6 +625,10 @@ function space_down(): void {
 
 function mouse_scroll(direction: number): void {
     unit_pix += direction * 10;
+}
+
+function r_down() {
+    polygons = JSON.parse(JSON.stringify(initial_position));
 }
 
 let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};
