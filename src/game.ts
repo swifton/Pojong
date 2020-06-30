@@ -238,6 +238,15 @@ function render() {
         else alpha = 0.3;
         
         draw_polygon(polygon, colors[polygon.template_i], alpha);
+        
+        // Visualizing and labeling the center of the polygon.
+        main_context.fillStyle = "orange";
+        main_context.beginPath();
+        let canv_v = world_to_canvas(polygon.center);
+        main_context.font = '10px serif';
+        main_context.fillText(polygon_i.toString(), canv_v.x, canv_v.y);
+        //main_context.arc(canv_v.x, canv_v.y, 5, 0, 2 * Math.PI);
+        main_context.fill();
     }
 	
     if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.5);
@@ -460,7 +469,7 @@ function create_foam() {
             let vx_i = random_integer(0, polygon.vertices.length);
             let edge: Edge = {v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length]};
             add_polygon(edge, polygons[polygon_i], template_i);
-            update_polygon_freeness(polygons[polygons.length - 1]);
+            update_polygon_freeness(polygons[polygons.length - 1], polygons);
             if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1) polygons.splice(polygons.length - 1, 1);
             
             max_iterations -= 1;
@@ -471,8 +480,8 @@ function create_foam() {
         }
         
         // Check if both of them are free. If not, start over.
-        update_polygon_freeness(polygons[polygons.length - 2]);
-        update_polygon_freeness(polygons[polygons.length - 1]);
+        update_polygon_freeness(polygons[polygons.length - 2], polygons);
+        update_polygon_freeness(polygons[polygons.length - 1], polygons);
         if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
             polygons.splice(polygons.length - 2, 2);
         }
@@ -480,16 +489,16 @@ function create_foam() {
     
     console.log(polygons.length);
     
-    update_polygons_freeness();
+    update_polygons_freeness(polygons);
     
     initial_position = JSON.parse(JSON.stringify(polygons));
 }
 
-function update_polygon_freeness(polygon: Polygon): void {
+function update_polygon_freeness(polygon: Polygon, position: Polygon[]): void {
     let n_blocked_edges: number = 0;
     
     for (let vx_i = 0; vx_i < polygon.vertices.length; vx_i += 1) {
-        for (let other_polygon of polygons) {
+        for (let other_polygon of position) {
             if (other_polygon == polygon) continue;
             for (let other_vx_i = 0; other_vx_i < other_polygon.vertices.length; other_vx_i += 1) {
                 let vx1 = polygon.vertices[vx_i];
@@ -509,9 +518,9 @@ function update_polygon_freeness(polygon: Polygon): void {
     else polygon.free = false;
 }
 
-function update_polygons_freeness() {
-    for (let polygon of polygons) {
-        update_polygon_freeness(polygon);
+function update_polygons_freeness(position: Polygon[]) {
+    for (let polygon of position) {
+        update_polygon_freeness(polygon, position);
     }
 }
 
@@ -566,7 +575,7 @@ function mouse_up(x: number, y: number): void {
                     polygons.splice(polygon1_i, 1);
                     hovered_polygon_i = undefined;
                     selected_polygon_i = undefined;
-                    update_polygons_freeness();
+                    update_polygons_freeness(polygons);
                 }
             }
         }
@@ -658,22 +667,79 @@ function q_down() {
     remove_random();
 }
 
-function remove_random() {
+function e_down() {
+    let solution = solve(polygons);
+    console.log(solution);
+}
+
+function find_possible_pairs(position: Polygon[]): [number, number][] {
     let unblocked_polygons_i: number[] = [];
     let possible_pairs: [number, number][] = [];
     
-    for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-        if (polygons[polygon_i].free) unblocked_polygons_i.push(polygon_i);
+    for (let polygon_i = 0; polygon_i < position.length; polygon_i += 1) {
+        if (position[polygon_i].free) unblocked_polygons_i.push(polygon_i);
     }
     
     for (let polygon1_i = 0; polygon1_i < unblocked_polygons_i.length; polygon1_i += 1) {
         for (let polygon2_i = polygon1_i + 1; polygon2_i < unblocked_polygons_i.length; polygon2_i += 1) {
-            if (polygons[unblocked_polygons_i[polygon1_i]].template_i == polygons[unblocked_polygons_i[polygon2_i]].template_i) {
+            if (position[unblocked_polygons_i[polygon1_i]].template_i == position[unblocked_polygons_i[polygon2_i]].template_i) {
                 possible_pairs.push([unblocked_polygons_i[polygon1_i], unblocked_polygons_i[polygon2_i]]);
             }
         }
     }
     
+    return possible_pairs;
+}
+
+function solve(position: Polygon[]): [number, number][] {
+    let position_sequence: Polygon[][] = [position];
+    let pair_indices: number[] = [];
+    let possible_pair_sequence: [number, number][][] = []; // Possible pairs for each level
+    
+    possible_pair_sequence.push(find_possible_pairs(position));
+    if (possible_pair_sequence[0].length == 0) return undefined;
+    pair_indices.push(0);
+    let level = 0;
+    
+    while (true) {
+        if (level == -1) return undefined;
+        
+        if (position_sequence[level].length == 1) break;
+        
+        if (pair_indices[level] == possible_pair_sequence[level].length) {
+            level -= 1;
+            pair_indices[level] += 1;
+            continue;
+        }
+        
+        let pair = possible_pair_sequence[level][pair_indices[level]];
+        
+        let new_position = JSON.parse(JSON.stringify(position_sequence[level]));
+        new_position.splice(pair[1], 1);
+        new_position.splice(pair[0], 1);
+        update_polygons_freeness(new_position);
+        let new_pairs = find_possible_pairs(new_position);
+        
+        level += 1;
+        
+        if (possible_pair_sequence.length == level)  possible_pair_sequence.push(new_pairs);
+        else possible_pair_sequence[level] = new_pairs;
+        
+        if (position_sequence.length == level) position_sequence.push(new_position);
+        else position_sequence[level] = new_position;
+        
+        if (pair_indices.length == level) pair_indices.push(0);
+        else pair_indices[level] = 0;
+    }
+    
+    let solution: [number, number][] = [];
+    for (let turn_i = 0; turn_i < level; turn_i += 1) solution.push(possible_pair_sequence[turn_i][pair_indices[turn_i]]);
+    
+    return solution;
+}
+
+function remove_random() {
+    let possible_pairs = find_possible_pairs(polygons);
     if (possible_pairs.length == 0) return;
     
     let pair_i = random_integer(0, possible_pairs.length);

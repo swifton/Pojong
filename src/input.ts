@@ -12,9 +12,9 @@ function do_key_down(e: KeyboardEvent) {
     if (i == 82) r_down();
     if (i == 90) z_down();
     if (i == 81) q_down();
+    if (i == 69) e_down();
     
     /*
-    if (i == 69) e_down();
         if (i == 37 && typeof left_key_down != "undefined") left_key_down();
         if (i == 39 && typeof right_key_down != "undefined") right_key_down();
         if (i == 38 && typeof up_key_down != "undefined") up_key_down();
