@@ -654,6 +654,34 @@ function z_down() {
     }
 }
 
+function q_down() {
+    remove_random();
+}
+
+function remove_random() {
+    let unblocked_polygons_i: number[] = [];
+    let possible_pairs: [number, number][] = [];
+    
+    for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
+        if (polygons[polygon_i].free) unblocked_polygons_i.push(polygon_i);
+    }
+    
+    for (let polygon1_i = 0; polygon1_i < unblocked_polygons_i.length; polygon1_i += 1) {
+        for (let polygon2_i = polygon1_i + 1; polygon2_i < unblocked_polygons_i.length; polygon2_i += 1) {
+            if (polygons[unblocked_polygons_i[polygon1_i]].template_i == polygons[unblocked_polygons_i[polygon2_i]].template_i) {
+                possible_pairs.push([unblocked_polygons_i[polygon1_i], unblocked_polygons_i[polygon2_i]]);
+            }
+        }
+    }
+    
+    if (possible_pairs.length == 0) return;
+    
+    let pair_i = random_integer(0, possible_pairs.length);
+    
+    polygons.splice(possible_pairs[pair_i][1], 1);
+    polygons.splice(possible_pairs[pair_i][0], 1);
+}
+
 let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};
 create_foam();
 
