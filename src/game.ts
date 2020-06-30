@@ -644,6 +644,7 @@ function mouse_scroll(direction: number): void {
 function r_down() {
     polygons = JSON.parse(JSON.stringify(initial_position));
     undo_stack = [];
+    selected_polygon_i = undefined;
 }
 
 function z_down() {
