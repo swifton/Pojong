@@ -464,6 +464,12 @@ function create_foam() {
         // Find spots for two polygons of the same type
         let max_iterations = 100;
         while (polygons.length < old_length + 2) {
+            max_iterations -= 1;
+            if (max_iterations == 0) {
+                if (polygons.length > old_length) polygons.splice(polygons.length - 1, 1);
+                break;
+            }
+            
             let polygon_i = random_integer(0, polygons.length);
             let polygon = polygons[polygon_i];
             let vx_i = random_integer(0, polygon.vertices.length);
@@ -471,12 +477,6 @@ function create_foam() {
             add_polygon(edge, polygons[polygon_i], template_i);
             update_polygon_freeness(polygons[polygons.length - 1], polygons);
             if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1) polygons.splice(polygons.length - 1, 1);
-            
-            max_iterations -= 1;
-            if (max_iterations == 0) {
-                if (polygons.length > old_length) polygons.splice(polygons.length - 1, 1);
-                break;
-            }
         }
         
         // Check if both of them are free. If not, start over.
@@ -487,7 +487,7 @@ function create_foam() {
         }
     }
     
-    console.log(polygons.length);
+    //console.log(polygons.length);
     
     update_polygons_freeness(polygons);
     
@@ -702,6 +702,7 @@ function solve(position: Polygon[]): [number, number][] {
     let level = 0;
     
     while (true) {
+        console.log(level, pair_indices[level], possible_pair_sequence[level].length, position_sequence[level].length);
         if (level == -1) return undefined;
         
         if (position_sequence[level].length == 1) break;
@@ -748,7 +749,44 @@ function remove_random() {
     polygons.splice(possible_pairs[pair_i][0], 1);
 }
 
-let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};
-create_foam();
-
 if (templates.length > colors.length) console.log("ERROR: Not enough colors.");
+let first_edge: Edge = {v1: {x: 0, y: 0}, v2: {x: 1, y: 0}};
+//create_foam();
+
+function w_down() {
+    enough = true;
+}
+
+let n_iterations = 0;
+let enough = false;
+function run_test() {
+    create_foam();
+    let solution = solve(polygons);
+    if (solution == undefined) {
+        console.log("ERROR: No solution found!");
+        return ;
+    }
+    polygons = [];
+    n_iterations += 1;
+    console.log("Iteration: " + n_iterations.toString());
+    if (enough) return;
+    
+    setTimeout(run_test, 1);
+}
+
+function run_test1() {
+    create_foam();
+    
+    if (polygons.length % 2 == 0) {
+        console.log("ERROR: Even number of polygons!");
+        return;
+    }
+    
+    n_iterations += 1;
+    console.log("Iteration: " + n_iterations.toString());
+    
+    polygons = [];
+    setTimeout(run_test1, 1);
+}
+
+run_test1();
