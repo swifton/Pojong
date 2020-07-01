@@ -709,21 +709,23 @@ function solve(position: Polygon[]): [number, number][] {
     while (true) {
         //if (level == -1) return undefined;
         if (level == -1) break;
+        
+        //if (position_sequence[level].length == 1) break;
+        
+        update_polygons_freeness(position_sequence[level]);
+        let n_blocked_polygons = 0;
+        for (let p of position_sequence[level]) {
+            if (!p.free) n_blocked_polygons += 1;
+        }
+        
         n_turns += 1;
         if (n_turns % 1000000 == 0) {
             let progress_string = "Progress ";
+            progress_string += " | " + n_blocked_polygons.toString() + " | " + position_sequence[level].length.toString() + " | ";
             for (let index_i = 0; index_i < level; index_i += 1) {
                 progress_string += pair_indices[index_i].toString() + "/" + possible_pair_sequence[index_i].length.toString() + ", ";
             }
             console.log("Turn # " + (n_turns/1000000).toString() + " million. " + progress_string);
-        }
-        
-        //if (position_sequence[level].length == 1) break;
-        
-        
-        let n_blocked_polygons = 0;
-        for (let p of position_sequence[level]) {
-            if (!p.free) n_blocked_polygons += 1;
         }
         
         if (pair_indices[level] == possible_pair_sequence[level].length || position_sequence[level].length == 1 || n_blocked_polygons == 0) {
@@ -758,7 +760,8 @@ function solve(position: Polygon[]): [number, number][] {
         else pair_indices[level] = 0;
     }
     
-    console.log("Solved in " + n_turns.toString() + " turns. " + n_wins.toString() + " wins, " + n_stucks.toString() + " stucks.");
+    let ws_ratio = n_wins / n_stucks;
+    console.log("Solved in " + n_turns.toString() + " turns. " + n_wins.toString() + " wins, " + n_stucks.toString() + " stucks. w/s ratio: " + ws_ratio.toString());
     
     let solution: [number, number][] = [];
     for (let turn_i = 0; turn_i < level; turn_i += 1) solution.push(possible_pair_sequence[turn_i][pair_indices[turn_i]]);
