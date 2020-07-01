@@ -769,6 +769,30 @@ function solve(position: Polygon[]): [number, number][] {
     return solution;
 }
 
+function random_pass(initial_position: Polygon[]): boolean {
+    let position = JSON.parse(JSON.stringify(initial_position));
+    
+    while (true) {
+        update_polygons_freeness(position);
+        
+        let n_blocked_polygons = 0;
+        for (let p of position) {
+            if (!p.free) n_blocked_polygons += 1;
+        }
+        
+        if (n_blocked_polygons == 0) return true;
+        
+        let pairs = find_possible_pairs(position);
+        
+        if (pairs.length == 0) return false;
+        
+        let pair = pairs[random_integer(0, pairs.length)];
+        
+        position.splice(pair[1], 1);
+        position.splice(pair[0], 1);
+    }
+}
+
 function remove_random() {
     let possible_pairs = find_possible_pairs(polygons);
     if (possible_pairs.length == 0) return;
@@ -793,6 +817,8 @@ let enough = false;
 // Create a solitaire, solve it, repeat.
 function test_1() {
     create_foam();
+    
+    n_iterations += 1;
     console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
     
     let solution = solve(polygons);
@@ -801,7 +827,6 @@ function test_1() {
         return ;
     }
     polygons = [];
-    n_iterations += 1;
     if (enough) return;
     
     setTimeout(test_1, 1);
@@ -812,6 +837,7 @@ function test_1() {
 function test_2() {
     create_foam();
     
+    n_iterations += 1;
     console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
     
     if (polygons.length % 2 == 0) {
@@ -819,11 +845,29 @@ function test_2() {
         return;
     }
     
-    n_iterations += 1;
-    console.log("Iteration: " + n_iterations.toString());
     
     polygons = [];
     setTimeout(test_2, 1);
 }
 
-test_1();
+function test_3() {
+    create_foam();
+    
+    n_iterations += 1;
+    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
+    
+    let n_wins = 0;
+    let n_losses = 0;
+    for (let pass_i = 0; pass_i < 1000; pass_i += 1) {
+        let result = random_pass(polygons);
+        if (result) n_wins += 1;
+        else n_losses += 1;
+    }
+    let ratio = n_wins / n_losses;
+    console.log("Wins: " + n_wins.toString() + ", losses: " + n_losses.toString() + ", ratio: " + ratio.toString());
+    
+    polygons = [];
+    setTimeout(test_3, 1);
+}
+
+test_3();
