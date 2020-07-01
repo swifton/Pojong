@@ -457,7 +457,7 @@ function create_foam() {
     polygons = [];
     add_polygon(first_edge, undefined, 0);
     
-    for (let i = 0; i < 50; i += 1) {
+    while (polygons.length < 27) {
         let template_i = random_integer(0, templates.length);
         
         let old_length = polygons.length;
@@ -702,6 +702,10 @@ function solve(position: Polygon[]): [number, number][] {
     let level = 0;
     
     let n_turns = 0;
+    
+    let n_wins = 0;
+    let n_stucks = 0;
+    
     while (true) {
         //if (level == -1) return undefined;
         if (level == -1) break;
@@ -711,14 +715,24 @@ function solve(position: Polygon[]): [number, number][] {
             for (let index_i = 0; index_i < level; index_i += 1) {
                 progress_string += pair_indices[index_i].toString() + "/" + possible_pair_sequence[index_i].length.toString() + ", ";
             }
-            console.log("Turn # " + (n_turns/1000000).toString() + " millon. " + progress_string);
+            console.log("Turn # " + (n_turns/1000000).toString() + " million. " + progress_string);
         }
         
         //if (position_sequence[level].length == 1) break;
         
-        if (pair_indices[level] == possible_pair_sequence[level].length || position_sequence[level].length == 1) {
+        
+        let n_blocked_polygons = 0;
+        for (let p of position_sequence[level]) {
+            if (!p.free) n_blocked_polygons += 1;
+        }
+        
+        if (pair_indices[level] == possible_pair_sequence[level].length || position_sequence[level].length == 1 || n_blocked_polygons == 0) {
+            if (possible_pair_sequence[level].length == 0) n_stucks += 1;
+            if (position_sequence[level].length == 1 || n_blocked_polygons == 0) n_wins += 1;
+            
             level -= 1;
             pair_indices[level] += 1;
+            
             continue;
         }
         
@@ -744,7 +758,7 @@ function solve(position: Polygon[]): [number, number][] {
         else pair_indices[level] = 0;
     }
     
-    console.log("Solved in " + n_turns.toString() + " turns.");
+    console.log("Solved in " + n_turns.toString() + " turns. " + n_wins.toString() + " wins, " + n_stucks.toString() + " stucks.");
     
     let solution: [number, number][] = [];
     for (let turn_i = 0; turn_i < level; turn_i += 1) solution.push(possible_pair_sequence[turn_i][pair_indices[turn_i]]);
@@ -772,9 +786,12 @@ function w_down() {
 
 let n_iterations = 0;
 let enough = false;
-function run_test() {
-    console.log("Iteration: " + n_iterations.toString());
+
+// Create a solitaire, solve it, repeat.
+function test_1() {
     create_foam();
+    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
+    
     let solution = solve(polygons);
     if (solution == undefined) {
         console.log("ERROR: No solution found!");
@@ -784,11 +801,15 @@ function run_test() {
     n_iterations += 1;
     if (enough) return;
     
-    setTimeout(run_test, 1);
+    setTimeout(test_1, 1);
 }
 
-function run_test1() {
+// Create a solitaire, make sure the number of polygons is odd. 
+// (Otherwise it obviously can't be reduced to a single triangle)
+function test_2() {
     create_foam();
+    
+    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
     
     if (polygons.length % 2 == 0) {
         console.log("ERROR: Even number of polygons!");
@@ -799,7 +820,7 @@ function run_test1() {
     console.log("Iteration: " + n_iterations.toString());
     
     polygons = [];
-    setTimeout(run_test1, 1);
+    setTimeout(test_2, 1);
 }
 
-run_test();
+test_1();
