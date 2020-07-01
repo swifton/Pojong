@@ -701,13 +701,22 @@ function solve(position: Polygon[]): [number, number][] {
     pair_indices.push(0);
     let level = 0;
     
+    let n_turns = 0;
     while (true) {
-        console.log(level, pair_indices[level], possible_pair_sequence[level].length, position_sequence[level].length);
-        if (level == -1) return undefined;
+        //if (level == -1) return undefined;
+        if (level == -1) break;
+        n_turns += 1;
+        if (n_turns % 1000000 == 0) {
+            let progress_string = "Progress ";
+            for (let index_i = 0; index_i < level; index_i += 1) {
+                progress_string += pair_indices[index_i].toString() + "/" + possible_pair_sequence[index_i].length.toString() + ", ";
+            }
+            console.log("Turn # " + (n_turns/1000000).toString() + " millon. " + progress_string);
+        }
         
-        if (position_sequence[level].length == 1) break;
+        //if (position_sequence[level].length == 1) break;
         
-        if (pair_indices[level] == possible_pair_sequence[level].length) {
+        if (pair_indices[level] == possible_pair_sequence[level].length || position_sequence[level].length == 1) {
             level -= 1;
             pair_indices[level] += 1;
             continue;
@@ -715,7 +724,9 @@ function solve(position: Polygon[]): [number, number][] {
         
         let pair = possible_pair_sequence[level][pair_indices[level]];
         
-        let new_position = JSON.parse(JSON.stringify(position_sequence[level]));
+        //let new_position = JSON.parse(JSON.stringify(position_sequence[level]));
+        let new_position: Polygon[] = [];
+        for (let polygon of position_sequence[level]) new_position.push(polygon);
         new_position.splice(pair[1], 1);
         new_position.splice(pair[0], 1);
         update_polygons_freeness(new_position);
@@ -732,6 +743,8 @@ function solve(position: Polygon[]): [number, number][] {
         if (pair_indices.length == level) pair_indices.push(0);
         else pair_indices[level] = 0;
     }
+    
+    console.log("Solved in " + n_turns.toString() + " turns.");
     
     let solution: [number, number][] = [];
     for (let turn_i = 0; turn_i < level; turn_i += 1) solution.push(possible_pair_sequence[turn_i][pair_indices[turn_i]]);
@@ -760,6 +773,7 @@ function w_down() {
 let n_iterations = 0;
 let enough = false;
 function run_test() {
+    console.log("Iteration: " + n_iterations.toString());
     create_foam();
     let solution = solve(polygons);
     if (solution == undefined) {
@@ -768,7 +782,6 @@ function run_test() {
     }
     polygons = [];
     n_iterations += 1;
-    console.log("Iteration: " + n_iterations.toString());
     if (enough) return;
     
     setTimeout(run_test, 1);
@@ -789,4 +802,4 @@ function run_test1() {
     setTimeout(run_test1, 1);
 }
 
-run_test1();
+run_test();
