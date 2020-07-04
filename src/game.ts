@@ -239,6 +239,7 @@ function render() {
         
         draw_polygon(polygon, colors[polygon.template_i], alpha);
         
+        /*
         // Visualizing and labeling the center of the polygon.
         main_context.fillStyle = "orange";
         main_context.beginPath();
@@ -247,6 +248,7 @@ function render() {
         main_context.fillText(polygon_i.toString(), canv_v.x, canv_v.y);
         //main_context.arc(canv_v.x, canv_v.y, 5, 0, 2 * Math.PI);
         main_context.fill();
+        */
     }
 	
     if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.5);
@@ -850,12 +852,7 @@ function test_2() {
     setTimeout(test_2, 1);
 }
 
-function test_3() {
-    create_foam();
-    
-    n_iterations += 1;
-    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
-    
+function test_current_position() {
     let n_wins = 0;
     let n_losses = 0;
     for (let pass_i = 0; pass_i < 1000; pass_i += 1) {
@@ -865,9 +862,28 @@ function test_3() {
     }
     let ratio = n_wins / n_losses;
     console.log("Wins: " + n_wins.toString() + ", losses: " + n_losses.toString() + ", ratio: " + ratio.toString());
+}
+
+function test_3() {
+    create_foam();
+    
+    n_iterations += 1;
+    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
+    
+    test_current_position();
     
     polygons = [];
     setTimeout(test_3, 1);
 }
 
-test_3();
+function a_down() {
+    test_current_position();
+}
+
+function s_down() {
+    undo_stack = [];
+    polygons = [];
+    create_foam();
+}
+
+// test_3();
