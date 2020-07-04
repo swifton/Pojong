@@ -852,7 +852,26 @@ function test_2() {
     setTimeout(test_2, 1);
 }
 
-function test_current_position() {
+function position_variation(position: Polygon[]): number {
+    let frequencies: number[] = [];
+    for (let t of templates) frequencies.push(0);
+    
+    for (let polygon of position) frequencies[polygon.template_i] += 1;
+    console.log("frequencies");
+    console.log(frequencies);
+    
+    let sum = 0;
+    let sum_squares = 0;
+    
+    for (let frequency of frequencies) {
+        sum += frequency;
+        sum_squares += Math.pow(frequency, 2);
+    }
+    
+    return sum_squares / frequencies.length - Math.pow(sum / frequencies.length, 2);
+}
+
+function test_current_position(): number {
     let n_wins = 0;
     let n_losses = 0;
     for (let pass_i = 0; pass_i < 1000; pass_i += 1) {
@@ -861,16 +880,23 @@ function test_current_position() {
         else n_losses += 1;
     }
     let ratio = n_wins / n_losses;
+    if (n_losses == 0) ratio = 1000;
     console.log("Wins: " + n_wins.toString() + ", losses: " + n_losses.toString() + ", ratio: " + ratio.toString());
+    console.log("Variation in frequencies: " + position_variation(polygons).toString());
+    return ratio;
 }
 
+let sum_ratios = 0;
 function test_3() {
     create_foam();
     
     n_iterations += 1;
+    
     console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
     
-    test_current_position();
+    sum_ratios += test_current_position();
+    
+    console.log("Average ratio: " + (sum_ratios / n_iterations).toString());
     
     polygons = [];
     setTimeout(test_3, 1);
