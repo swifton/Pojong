@@ -478,7 +478,8 @@ function create_foam() {
             let edge: Edge = {v1: polygon.vertices[vx_i], v2: polygon.vertices[(vx_i + 1) % polygon.vertices.length]};
             add_polygon(edge, polygons[polygon_i], template_i);
             update_polygon_freeness(polygons[polygons.length - 1], polygons);
-            if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1) polygons.splice(polygons.length - 1, 1);
+            
+            if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1 && polygons[polygons.length - 1].template_i != 0 && polygons[polygons.length - 1].template_i != 2) polygons.splice(polygons.length - 1, 1);
         }
         
         // Check if both of them are free. If not, start over.
