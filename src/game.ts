@@ -772,6 +772,61 @@ function solve(position: Polygon[]): [number, number][] {
     return solution;
 }
 
+function better_solve(position: Polygon[]): void {
+    // Each position is represented by the list of inidces (in the original position) of polygons that are present.
+    let positions: number[][] = [[]];
+    
+    for (let polygon_i = 0; polygon_i < position.length; polygon_i += 1) positions[0].push(polygon_i);
+    
+    let position_i = 0;
+    while (position_i < positions.length) {
+        console.log(position_i, positions.length);
+        
+        let c_position: Polygon[] = [];
+        for (let index_i = 0; index_i < positions[position_i].length; index_i += 1) {
+            c_position.push(position[index_i]);
+        }
+        update_polygons_freeness(c_position);
+        let possible_pairs = find_possible_pairs(c_position);
+        
+        for (let pair of possible_pairs) {
+            let new_position: number[] = [];
+            for (let index_i = 0; index_i < positions[position_i].length; index_i += 1) {
+                if (index_i != pair[0] && index_i != pair[1]) new_position.push(positions[position_i][index_i]);
+            }
+            
+            let already_added = false;
+            for (let candidate_i = position_i + 1; candidate_i < positions.length; candidate_i += 1 ) {
+                let candidate = positions[candidate_i];
+                let candidate_matches = true;
+                
+                if (candidate.length == new_position.length) {
+                    for (let index_i = 0; index_i < candidate.length; index_i += 1) {
+                        if (candidate[index_i] != new_position[index_i]) {
+                            candidate_matches = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (candidate_matches) {
+                    already_added = true;
+                    break;
+                }
+            }
+            
+            if (!already_added) positions.push(new_position);
+        }
+        
+        /*
+        if (positions.length == 10) {
+            console.log(positions);
+            break;
+        }*/
+        position_i += 1;
+    }
+}
+
 function random_pass(initial_position: Polygon[]): boolean {
     let position = JSON.parse(JSON.stringify(initial_position));
     
@@ -904,7 +959,8 @@ function test_3() {
 }
 
 function a_down() {
-    test_current_position();
+    // test_current_position();
+    better_solve(polygons);
 }
 
 function s_down() {
