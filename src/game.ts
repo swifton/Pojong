@@ -56,6 +56,28 @@ class Polygon {
 	}
 }
 
+class Game_Graph {
+    coordinates: Vector[];
+    
+    constructor (public positions: number[][], public turns: [number, number][]) {
+        this.coordinates = [];
+        
+        let n_vertical = 0;
+        let c_length = positions[0].length;
+        for (let position_i = 0; position_i < positions.length; position_i += 1) {
+            let position = positions[position_i];
+            if (position.length < c_length) {
+                n_vertical = 0;
+                c_length = position.length;
+            }
+            
+            this.coordinates.push({x: c_length + 5, y: n_vertical + 5});
+            
+            n_vertical += 1;
+        }
+    }
+}
+
 let main_canvas = <HTMLCanvasElement> document.getElementById('canvas');
 let main_context = main_canvas.getContext('2d');
 
@@ -188,16 +210,15 @@ function draw_polygon(polygon: Polygon, color: string, alpha: number): void {
     main_context.globalAlpha = 1;
 }
 
-function draw_edge(edge: Edge, color: string) {
-    // Drawing the edge closest to the mouse
+function draw_line(p1: Vector, p2: Vector, color: string) {
     main_context.strokeStyle = color;
     
     main_context.beginPath();
-    let vx_1c = world_to_canvas(edge.v1);
-    let vx_2c = world_to_canvas(edge.v2);
+    let p_1c = world_to_canvas(p1);
+    let p_2c = world_to_canvas(p2);
     
-    main_context.moveTo(vx_1c.x, vx_1c.y);
-    main_context.lineTo(vx_2c.x, vx_2c.y);
+    main_context.moveTo(p_1c.x, p_1c.y);
+    main_context.lineTo(p_2c.x, p_2c.y);
     main_context.stroke();
 }
 
@@ -256,6 +277,19 @@ function render() {
 	
 	// Visualizing the mouse position.
     //draw_point(mouse_world_coord, "red");
+    
+    // Visualizing the game graph, if any.'
+    if (game_graph != undefined) {
+        for (let point of game_graph.coordinates) {
+            draw_point(point, "orange");
+        }
+        
+        for (let turn of game_graph.turns) {
+            let p1 = game_graph.coordinates[turn[0]];
+            let p2 = game_graph.coordinates[turn[1]];
+            draw_line(p1, p2, "brown");
+        }
+    }
 }
 
 function same_vertex(vertex_1: Vector, vertex_2: Vector): boolean {
@@ -772,9 +806,10 @@ function solve(position: Polygon[]): [number, number][] {
     return solution;
 }
 
-function better_solve(position: Polygon[]): void {
+function better_solve(position: Polygon[]): [number[][], [number, number][]] {
     // Each position is represented by the list of inidces (in the original position) of polygons that are present.
     let positions: number[][] = [[]];
+    let turns: [number, number][] = [];
     
     for (let polygon_i = 0; polygon_i < position.length; polygon_i += 1) positions[0].push(polygon_i);
     
@@ -811,20 +846,21 @@ function better_solve(position: Polygon[]): void {
                 
                 if (candidate_matches) {
                     already_added = true;
+                    turns.push([position_i, candidate_i]);
                     break;
                 }
             }
             
-            if (!already_added) positions.push(new_position);
+            if (!already_added) {
+                turns.push([position_i, positions.length]);
+                positions.push(new_position);
+            }
         }
         
-        /*
-        if (positions.length == 10) {
-            console.log(positions);
-            break;
-        }*/
         position_i += 1;
     }
+    
+    return [positions, turns];
 }
 
 function random_pass(initial_position: Polygon[]): boolean {
@@ -958,9 +994,13 @@ function test_3() {
     setTimeout(test_3, 1);
 }
 
+let game_graph: Game_Graph = undefined;
 function a_down() {
     // test_current_position();
-    better_solve(polygons);
+    let result = better_solve(polygons);
+    let positions  = result[0];
+    let turns = result[1];
+    game_graph = new Game_Graph(positions, turns);
 }
 
 function s_down() {
