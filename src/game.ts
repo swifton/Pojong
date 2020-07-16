@@ -230,6 +230,15 @@ function draw_point(point: Vector, color: string) {
     main_context.fill();
 }
 
+function draw_label(point: Vector, text: string, color: string) {
+    main_context.fillStyle = color;
+    let p_canvas = world_to_canvas(point);
+    main_context.beginPath();
+    main_context.font = '20px serif';
+    main_context.fillText(text, p_canvas.x, p_canvas.y);
+    main_context.fill();
+}
+
 function render() {
     // Resizing the canvas to fit the whole window.
 	main_canvas.width = window.innerWidth;
@@ -250,9 +259,14 @@ function render() {
 	main_context.globalAlpha = 1;
 	main_context.lineWidth = 2;
 	
-	// Drawing polygons
-	for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 1) {
-		let polygon = polygons[polygon_i];
+    let position_to_display: Polygon[];
+    
+    if (gg_position_to_display == undefined) position_to_display = polygons;
+    else position_to_display = gg_position_to_display;
+    
+    // Drawing polygons
+    for (let polygon_i = 0; polygon_i < position_to_display.length; polygon_i += 1) {
+		let polygon = position_to_display[polygon_i];
         
         let alpha: number;
         if (polygon.free) alpha = 1;
@@ -280,8 +294,10 @@ function render() {
     
     // Visualizing the game graph, if any.'
     if (game_graph != undefined) {
-        for (let point of game_graph.coordinates) {
+        for (let point_i = 0; point_i < game_graph.coordinates.length; point_i += 1) {
+            let point = game_graph.coordinates[point_i];
             draw_point(point, "orange");
+            draw_label(point, point_i.toString(), "green");
         }
         
         for (let turn of game_graph.turns) {
@@ -677,6 +693,22 @@ function mouse_move(x: number, y: number): void {
     }
     
     if (!found) hovered_polygon_i = undefined;
+    
+    if (game_graph != undefined) {
+        // gg_position_to_display = undefined;
+        for (let vx_i = 0; vx_i < game_graph.positions.length; vx_i += 1) {
+            if (euclid(mouse_world_coord, game_graph.coordinates[vx_i]) < 0.2) {
+                let position_to_load = game_graph.positions[vx_i];
+                gg_position_to_display = [];
+                for (let index_i = 0; index_i < position_to_load.length; index_i += 1) {
+                    gg_position_to_display.push(polygons[position_to_load[index_i]]);
+                }
+                update_polygons_freeness(gg_position_to_display);
+                
+                break;
+            }
+        }
+    }
 }
 
 function space_down(): void {
@@ -688,6 +720,7 @@ function mouse_scroll(direction: number): void {
 }
 
 function r_down() {
+    gg_position_to_display = undefined;
     polygons = JSON.parse(JSON.stringify(initial_position));
     undo_stack = [];
     selected_polygon_i = undefined;
@@ -833,9 +866,10 @@ function better_solve(position: Polygon[]): [number[][], [number, number][]] {
             let already_added = false;
             for (let candidate_i = position_i + 1; candidate_i < positions.length; candidate_i += 1 ) {
                 let candidate = positions[candidate_i];
-                let candidate_matches = true;
+                let candidate_matches = false;
                 
                 if (candidate.length == new_position.length) {
+                    candidate_matches = true;
                     for (let index_i = 0; index_i < candidate.length; index_i += 1) {
                         if (candidate[index_i] != new_position[index_i]) {
                             candidate_matches = false;
@@ -995,6 +1029,7 @@ function test_3() {
 }
 
 let game_graph: Game_Graph = undefined;
+let gg_position_to_display: Polygon[] = undefined;
 function a_down() {
     // test_current_position();
     let result = better_solve(polygons);
