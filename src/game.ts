@@ -59,7 +59,7 @@ class Polygon {
 class Game_Graph {
     coordinates: Vector[];
     
-    constructor (public positions: number[][], public turns: [number, number][]) {
+    constructor (public positions: number[][], public turns: [number, number][], public dead_ends: boolean[]) {
         this.coordinates = [];
         
         let n_vertical = 0;
@@ -273,7 +273,7 @@ function render() {
         else alpha = 0.3;
         
         draw_polygon(polygon, colors[polygon.template_i], alpha);
-        
+        draw_label(polygon.center, polygon_i.toString(), "orange");
         /*
         // Visualizing and labeling the center of the polygon.
         main_context.fillStyle = "orange";
@@ -292,18 +292,21 @@ function render() {
 	// Visualizing the mouse position.
     //draw_point(mouse_world_coord, "red");
     
-    // Visualizing the game graph, if any.'
+    // Visualizing the game graph, if any.
     if (game_graph != undefined) {
-        for (let point_i = 0; point_i < game_graph.coordinates.length; point_i += 1) {
-            let point = game_graph.coordinates[point_i];
-            draw_point(point, "orange");
-            draw_label(point, point_i.toString(), "green");
-        }
-        
         for (let turn of game_graph.turns) {
             let p1 = game_graph.coordinates[turn[0]];
             let p2 = game_graph.coordinates[turn[1]];
             draw_line(p1, p2, "brown");
+        }
+        
+        for (let point_i = 0; point_i < game_graph.coordinates.length; point_i += 1) {
+            let point = game_graph.coordinates[point_i];
+            let color: string;
+            if (game_graph.dead_ends[point_i]) color = "black";
+            else color = "orange";
+            draw_point(point, color);
+            // draw_label(point, point_i.toString(), "green");
         }
     }
 }
@@ -839,10 +842,11 @@ function solve(position: Polygon[]): [number, number][] {
     return solution;
 }
 
-function better_solve(position: Polygon[]): [number[][], [number, number][]] {
+function generate_game_graph(position: Polygon[]): [number[][], [number, number][], boolean[]] {
     // Each position is represented by the list of inidces (in the original position) of polygons that are present.
     let positions: number[][] = [[]];
     let turns: [number, number][] = [];
+    let dead_ends: boolean[] = [true];
     
     for (let polygon_i = 0; polygon_i < position.length; polygon_i += 1) positions[0].push(polygon_i);
     
@@ -852,10 +856,12 @@ function better_solve(position: Polygon[]): [number[][], [number, number][]] {
         
         let c_position: Polygon[] = [];
         for (let index_i = 0; index_i < positions[position_i].length; index_i += 1) {
-            c_position.push(position[index_i]);
+            c_position.push(position[positions[position_i][index_i]]);
         }
         update_polygons_freeness(c_position);
         let possible_pairs = find_possible_pairs(c_position);
+        
+        if (possible_pairs.length > 0) dead_ends[position_i] = false;
         
         for (let pair of possible_pairs) {
             let new_position: number[] = [];
@@ -888,13 +894,19 @@ function better_solve(position: Polygon[]): [number[][], [number, number][]] {
             if (!already_added) {
                 turns.push([position_i, positions.length]);
                 positions.push(new_position);
+                dead_ends.push(true);
             }
         }
         
         position_i += 1;
+        
+        if (positions.length > 2000) {
+            console.log("ERROR: The graph is too big.");
+            break;
+        }
     }
     
-    return [positions, turns];
+    return [positions, turns, dead_ends];
 }
 
 function random_pass(initial_position: Polygon[]): boolean {
@@ -1031,17 +1043,28 @@ function test_3() {
 let game_graph: Game_Graph = undefined;
 let gg_position_to_display: Polygon[] = undefined;
 function a_down() {
-    // test_current_position();
-    let result = better_solve(polygons);
+    let result = generate_game_graph(polygons);
     let positions  = result[0];
     let turns = result[1];
-    game_graph = new Game_Graph(positions, turns);
+    let dead_ends = result[2];
+    game_graph = new Game_Graph(positions, turns, dead_ends);
+    
+    test_current_position();
 }
 
 function s_down() {
     undo_stack = [];
     polygons = [];
     create_foam();
+}
+
+function d_down() {
+    let position_to_display: Polygon[];
+    
+    if (gg_position_to_display == undefined) position_to_display = polygons;
+    else position_to_display = gg_position_to_display;
+    
+    console.log(find_possible_pairs(position_to_display));
 }
 
 // test_3();
