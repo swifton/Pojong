@@ -261,7 +261,7 @@ function reset_ui_frame(): void {
 
 function button(text: string): boolean {
     ui_cursor.y += 10;
-    let button_width = 100;
+    let button_width = 150;
     let button_height = 30;
     
     let mouse_inside = 
@@ -292,6 +292,8 @@ function button(text: string): boolean {
     return pressed;
 }
 
+let show
+
 function render() {
     reset_ui_frame();
     
@@ -307,9 +309,9 @@ function render() {
     main_context.fill();
     
     // Rendering UI and taking input.
-    if (button("Controls")) {
-        console.log("Controls!");
-    }
+    if (button("Restart (R)")) restart();
+    if (button("Undo (Z)")) undo();
+    if (button("New Solitaire")) generate();
     
 	// Hadndling canvas panning (operated by dragging the mouse).
 	canvas_center[0] = main_canvas.width / 2 + pan_offset_x + old_pan_offset_x;
@@ -776,22 +778,18 @@ function mouse_move(x: number, y: number): void {
     }
 }
 
-function space_down(): void {
-    
-}
-
 function mouse_scroll(direction: number): void {
     unit_pix += direction * 10;
 }
 
-function r_down() {
+function restart() {
     gg_position_to_display = undefined;
     polygons = JSON.parse(JSON.stringify(initial_position));
     undo_stack = [];
     selected_polygon_i = undefined;
 }
 
-function z_down() {
+function undo() {
     if (undo_stack.length > 0) {
         polygons = undo_stack.pop();
         selected_polygon_i = undefined;
@@ -1109,7 +1107,7 @@ function a_down() {
     test_current_position();
 }
 
-function s_down() {
+function generate() {
     undo_stack = [];
     polygons = [];
     create_foam();
@@ -1125,3 +1123,5 @@ function d_down() {
 }
 
 // test_3();
+
+generate();
