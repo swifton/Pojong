@@ -273,7 +273,7 @@ function render() {
         else alpha = 0.3;
         
         draw_polygon(polygon, colors[polygon.template_i], alpha);
-        draw_label(polygon.center, polygon_i.toString(), "orange");
+        //draw_label(polygon.center, polygon_i.toString(), "orange");
         /*
         // Visualizing and labeling the center of the polygon.
         main_context.fillStyle = "orange";
@@ -286,8 +286,8 @@ function render() {
         */
     }
 	
-    if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.5);
-    if (selected_polygon_i != undefined) draw_polygon(polygons[selected_polygon_i], "gray", 0.5);
+    if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.8);
+    if (selected_polygon_i != undefined) draw_polygon(polygons[selected_polygon_i], "gray", 0.8);
 	
 	// Visualizing the mouse position.
     //draw_point(mouse_world_coord, "red");
@@ -899,11 +899,6 @@ function generate_game_graph(position: Polygon[]): [number[][], [number, number]
         }
         
         position_i += 1;
-        
-        if (positions.length > 2000) {
-            console.log("ERROR: The graph is too big.");
-            break;
-        }
     }
     
     return [positions, turns, dead_ends];
