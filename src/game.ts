@@ -249,12 +249,13 @@ function draw_label_canvas(point: Vector, text: string, color: string) {
 
 let ui_cursor: Vector;
 let ui_mouse_up: boolean;
-let ui_mouse_was_up: boolean;
+let ui_click_happened: boolean;
+let ui_mouse_down: boolean;
 let ui_mouse_position: Vector = {x: 0, y: 0};
 
 function reset_ui_frame(): void {
     ui_cursor = {x: 20, y: 20};
-    ui_mouse_was_up = ui_mouse_up;
+    ui_click_happened = ui_mouse_up;
     ui_mouse_up = false;
 }
 
@@ -263,7 +264,18 @@ function button(text: string): boolean {
     let button_width = 100;
     let button_height = 30;
     
-    main_context.fillStyle = '#777777';
+    let mouse_inside = 
+        ui_mouse_position.x > ui_cursor.x && 
+        ui_mouse_position.x < ui_cursor.x + button_width && 
+        ui_mouse_position.y > ui_cursor.y && 
+        ui_mouse_position.y < ui_cursor.y + button_height;
+    
+    if (mouse_inside) {
+        if (ui_mouse_down) main_context.fillStyle = '#999999';
+        else main_context.fillStyle = '#aaaaaa';
+    }
+    else main_context.fillStyle = '#777777';
+    
     main_context.strokeStyle = 'black';
     main_context.beginPath();
     main_context.rect(ui_cursor.x, ui_cursor.y, button_width, button_height);
@@ -273,11 +285,7 @@ function button(text: string): boolean {
     draw_label_canvas({x: ui_cursor.x + 10, y: ui_cursor.y + 22}, text, "blue");
     
     let pressed = false;
-    if (ui_mouse_was_up && 
-        ui_mouse_position.x > ui_cursor.x && 
-        ui_mouse_position.x < ui_cursor.x + button_width && 
-        ui_mouse_position.y > ui_cursor.y && 
-        ui_mouse_position.y < ui_cursor.y + button_height) pressed = true;
+    if (ui_click_happened && mouse_inside) pressed = true;
     
     ui_cursor.y += button_height;
     

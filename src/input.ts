@@ -72,7 +72,7 @@ main_canvas.addEventListener('mousemove', function(e){
                              }, false);
 
 main_canvas.addEventListener('mousedown', function(e) {
-                                 mouse_is_down = true;
+                                 ui_mouse_down = true;
                                  mouse = get_mouse_pos(main_canvas, e);
                                  let mouse_pos = get_mouse_pos(main_canvas, e);
                                  drag_start = {x: mouse_pos.x, y: mouse_pos.y};
@@ -82,7 +82,7 @@ main_canvas.addEventListener('mousedown', function(e) {
 
 main_canvas.addEventListener('mouseup', function(e) {
                                  ui_mouse_up = true;
-                                 mouse_is_down = false;
+                                 ui_mouse_down = false;
                                  mouse = get_mouse_pos(main_canvas, e);
                                  let mouse_pos = get_mouse_pos(main_canvas, e);
                                  if (typeof mouse_up != "undefined") mouse_up(mouse_pos.x, mouse_pos.y);
