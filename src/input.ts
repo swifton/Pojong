@@ -81,6 +81,7 @@ main_canvas.addEventListener('mousedown', function(e) {
                              }, false);
 
 main_canvas.addEventListener('mouseup', function(e) {
+                                 ui_mouse_up = true;
                                  mouse_is_down = false;
                                  mouse = get_mouse_pos(main_canvas, e);
                                  let mouse_pos = get_mouse_pos(main_canvas, e);

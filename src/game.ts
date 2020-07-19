@@ -239,7 +239,54 @@ function draw_label(point: Vector, text: string, color: string) {
     main_context.fill();
 }
 
+function draw_label_canvas(point: Vector, text: string, color: string) {
+    main_context.fillStyle = color;
+    main_context.beginPath();
+    main_context.font = '20px serif';
+    main_context.fillText(text, point.x, point.y);
+    main_context.fill();
+}
+
+let ui_cursor: Vector;
+let ui_mouse_up: boolean;
+let ui_mouse_was_up: boolean;
+let ui_mouse_position: Vector = {x: 0, y: 0};
+
+function reset_ui_frame(): void {
+    ui_cursor = {x: 20, y: 20};
+    ui_mouse_was_up = ui_mouse_up;
+    ui_mouse_up = false;
+}
+
+function button(text: string): boolean {
+    ui_cursor.y += 10;
+    let button_width = 100;
+    let button_height = 30;
+    
+    main_context.fillStyle = '#777777';
+    main_context.strokeStyle = 'black';
+    main_context.beginPath();
+    main_context.rect(ui_cursor.x, ui_cursor.y, button_width, button_height);
+    main_context.fill();
+    main_context.stroke();
+    
+    draw_label_canvas({x: ui_cursor.x + 10, y: ui_cursor.y + 22}, text, "blue");
+    
+    let pressed = false;
+    if (ui_mouse_was_up && 
+        ui_mouse_position.x > ui_cursor.x && 
+        ui_mouse_position.x < ui_cursor.x + button_width && 
+        ui_mouse_position.y > ui_cursor.y && 
+        ui_mouse_position.y < ui_cursor.y + button_height) pressed = true;
+    
+    ui_cursor.y += button_height;
+    
+    return pressed;
+}
+
 function render() {
+    reset_ui_frame();
+    
     // Resizing the canvas to fit the whole window.
 	main_canvas.width = window.innerWidth;
     main_canvas.height = window.innerHeight;
@@ -250,6 +297,11 @@ function render() {
     main_context.rect(0, 0, main_canvas.width, main_canvas.height);
     main_context.closePath();
     main_context.fill();
+    
+    // Rendering UI and taking input.
+    if (button("Controls")) {
+        console.log("Controls!");
+    }
     
 	// Hadndling canvas panning (operated by dragging the mouse).
 	canvas_center[0] = main_canvas.width / 2 + pan_offset_x + old_pan_offset_x;
@@ -678,6 +730,8 @@ function distance_to_segment(v1: Vector, v2: Vector, p: Vector): number {
 }
 
 function mouse_move(x: number, y: number): void {
+    ui_mouse_position = {x: x, y: y};
+    
     if (mouse_is_down) {
         pan_offset_x = x - mouse_down_pos[0];
         pan_offset_y = y - mouse_down_pos[1];
