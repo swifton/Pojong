@@ -242,7 +242,7 @@ function draw_label(point: Vector, text: string, color: string) {
 function draw_label_canvas(point: Vector, text: string, color: string) {
     main_context.fillStyle = color;
     main_context.beginPath();
-    main_context.font = '20px serif';
+    main_context.font = '20px Calibri';
     main_context.fillText(text, point.x, point.y);
     main_context.fill();
 }
@@ -292,7 +292,34 @@ function button(text: string): boolean {
     return pressed;
 }
 
-let show
+function show_rules() {
+    main_context.fillStyle = '#777777';
+    main_context.strokeStyle = 'black';
+    main_context.beginPath();
+    main_context.rect(main_canvas.width / 4, main_canvas.height / 4, main_canvas.width / 2, main_canvas.height / 2);
+    main_context.fill();
+    main_context.stroke();
+    
+    main_context.font = '20px Calibri';
+    
+    let lines = ["Click two similar polygons to remove both.", 
+                 "Only non-blocked polygons can be removed.", 
+                 "Blocked polygons are shaded.", 
+                 "You win when the board is empty.", 
+                 "A polygon is blocked when at least half of its boundary", 
+                 "is touched by other polygons."];
+    
+    let start_y = main_canvas.height / 4 + 60;
+    let width: number;
+    
+    for (let line of lines) {
+        width = main_context.measureText(line).width;
+        draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "blue");
+        start_y += 40;
+    }
+}
+
+let ui_show_rules = false;
 
 function render() {
     reset_ui_frame();
@@ -308,19 +335,14 @@ function render() {
     main_context.closePath();
     main_context.fill();
     
-    // Rendering UI and taking input.
-    if (button("Restart (R)")) restart();
-    if (button("Undo (Z)")) undo();
-    if (button("New Solitaire")) generate();
-    
-	// Hadndling canvas panning (operated by dragging the mouse).
-	canvas_center[0] = main_canvas.width / 2 + pan_offset_x + old_pan_offset_x;
-	canvas_center[1] = main_canvas.height / 2 + pan_offset_y + old_pan_offset_y;
-    
 	// Setting up canvas parameters that pertain to all drawing.
 	main_context.globalAlpha = 1;
 	main_context.lineWidth = 2;
 	
+	// Hadndling canvas panning (operated by dragging the mouse).
+	canvas_center[0] = main_canvas.width / 2 + pan_offset_x + old_pan_offset_x;
+	canvas_center[1] = main_canvas.height / 2 + pan_offset_y + old_pan_offset_y;
+    
     let position_to_display: Polygon[];
     
     if (gg_position_to_display == undefined) position_to_display = polygons;
@@ -371,6 +393,16 @@ function render() {
             // draw_label(point, point_i.toString(), "green");
         }
     }
+    
+    // Rendering UI and taking input.
+	main_context.globalAlpha = 1;
+	
+    if (button("Rules")) ui_show_rules = true;
+    if (button("Restart (R)")) restart();
+    if (button("Undo (Z)")) undo();
+    if (button("New Solitaire")) generate();
+    
+    if (ui_show_rules) show_rules();
 }
 
 function same_vertex(vertex_1: Vector, vertex_2: Vector): boolean {
