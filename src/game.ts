@@ -622,6 +622,10 @@ function add_polygon(edge: Edge, base: Polygon, template_i: number) {
 function create_foam() {
     polygons = [];
     add_polygon(first_edge, undefined, 0);
+    let tmp = first_edge.v1;
+    first_edge.v1 = first_edge.v2;
+    first_edge.v2 = tmp;
+    add_polygon(first_edge, polygons[0], 0);
     
     while (polygons.length < 27) {
         let template_i = random_integer(0, templates.length);
