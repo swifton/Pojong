@@ -297,15 +297,6 @@ function button(text: string): boolean {
 }
 
 function show_rules() {
-    main_context.fillStyle = '#889988';
-    main_context.strokeStyle = 'black';
-    main_context.beginPath();
-    main_context.rect(main_canvas.width / 4, main_canvas.height / 4, main_canvas.width / 2, main_canvas.height / 2);
-    main_context.fill();
-    main_context.stroke();
-    
-    main_context.font = '20px Calibri';
-    
     let lines = ["Click two similar polygons to remove both.", 
                  "Only non-blocked polygons can be removed.", 
                  "Blocked polygons are shaded.", 
@@ -313,16 +304,36 @@ function show_rules() {
                  "A polygon is blocked when at least half of its boundary", 
                  "is touched by other polygons."];
     
-    let start_y = main_canvas.height / 4 + 60;
+    main_context.fillStyle = '#889988';
+    main_context.strokeStyle = 'black';
+    main_context.font = '20px Calibri';
+    
+    let max_width = 0;
+    for (let line of lines) {
+        let line_width = main_context.measureText(line).width;
+        if (max_width < line_width) max_width = line_width;
+    }
+    
+    let rules_width = max_width + 40;
+    let rules_height = 60 + 40 * lines.length + button_height * 2;
+    
+    main_context.beginPath();
+    main_context.rect(main_canvas.width / 2 - rules_width / 2, main_canvas.height / 2 - rules_height / 2, rules_width, rules_height);
+    main_context.fill();
+    main_context.stroke();
+    
+    
+    let start_y = main_canvas.height / 2 - rules_height / 2 + 60;
     let width: number;
     
     for (let line of lines) {
         width = main_context.measureText(line).width;
         draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "black");
-        start_y += 40;
+        if (line[line.length - 1] == ".") start_y += 40;
+        else start_y += 20;
     }
     
-    if (button_with_position("Ok", {x: main_canvas.width / 2 - button_width / 2, y: 3 * main_canvas.height / 4 - button_height * 2})) ui_show_rules = false;
+    if (button_with_position("Ok", {x: main_canvas.width / 2 - button_width / 2, y: start_y})) ui_show_rules = false;
 }
 
 let ui_show_rules = false;
@@ -406,7 +417,7 @@ function render() {
     if (button("Rules")) ui_show_rules = true;
     if (button("Restart (R)")) restart();
     if (button("Undo (Z)")) undo();
-    if (button("New Solitaire")) generate();
+    if (button("New Game")) generate();
     
     if (ui_show_rules) show_rules();
 }
