@@ -259,16 +259,15 @@ function reset_ui_frame(): void {
     ui_mouse_up = false;
 }
 
-function button(text: string): boolean {
-    ui_cursor.y += 10;
-    let button_width = 150;
-    let button_height = 30;
-    
+let button_width = 150;
+let button_height = 30;
+
+function button_with_position(text: string, position: Vector) {
     let mouse_inside = 
-        ui_mouse_position.x > ui_cursor.x && 
-        ui_mouse_position.x < ui_cursor.x + button_width && 
-        ui_mouse_position.y > ui_cursor.y && 
-        ui_mouse_position.y < ui_cursor.y + button_height;
+        ui_mouse_position.x > position.x && 
+        ui_mouse_position.x < position.x + button_width && 
+        ui_mouse_position.y > position.y && 
+        ui_mouse_position.y < position.y + button_height;
     
     if (mouse_inside) {
         if (ui_mouse_down) main_context.fillStyle = '#999999';
@@ -278,22 +277,27 @@ function button(text: string): boolean {
     
     main_context.strokeStyle = 'black';
     main_context.beginPath();
-    main_context.rect(ui_cursor.x, ui_cursor.y, button_width, button_height);
+    main_context.rect(position.x, position.y, button_width, button_height);
     main_context.fill();
     main_context.stroke();
     
-    draw_label_canvas({x: ui_cursor.x + 10, y: ui_cursor.y + 22}, text, "blue");
+    draw_label_canvas({x: position.x + 10, y: position.y + 22}, text, "blue");
     
     let pressed = false;
     if (ui_click_happened && mouse_inside) pressed = true;
     
+    return pressed;
+}
+
+function button(text: string): boolean {
+    ui_cursor.y += 10;
+    let pressed = button_with_position(text, ui_cursor);
     ui_cursor.y += button_height;
-    
     return pressed;
 }
 
 function show_rules() {
-    main_context.fillStyle = '#777777';
+    main_context.fillStyle = '#889988';
     main_context.strokeStyle = 'black';
     main_context.beginPath();
     main_context.rect(main_canvas.width / 4, main_canvas.height / 4, main_canvas.width / 2, main_canvas.height / 2);
@@ -314,9 +318,11 @@ function show_rules() {
     
     for (let line of lines) {
         width = main_context.measureText(line).width;
-        draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "blue");
+        draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "black");
         start_y += 40;
     }
+    
+    if (button_with_position("Ok", {x: main_canvas.width / 2 - button_width / 2, y: 3 * main_canvas.height / 4 - button_height * 2})) ui_show_rules = false;
 }
 
 let ui_show_rules = false;
