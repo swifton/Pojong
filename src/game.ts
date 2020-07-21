@@ -234,7 +234,7 @@ function draw_label(point: Vector, text: string, color: string) {
     main_context.fillStyle = color;
     let p_canvas = world_to_canvas(point);
     main_context.beginPath();
-    main_context.font = '20px serif';
+    main_context.font = '20px Calibri';
     main_context.fillText(text, p_canvas.x, p_canvas.y);
     main_context.fill();
 }
@@ -281,7 +281,8 @@ function button_with_position(text: string, position: Vector) {
     main_context.fill();
     main_context.stroke();
     
-    draw_label_canvas({x: position.x + 10, y: position.y + 22}, text, "blue");
+    main_context.font = '20px Calibri';
+    draw_label_canvas({x: position.x + button_width / 2 - main_context.measureText(text).width / 2, y: position.y + 22}, text, "blue");
     
     let pressed = false;
     if (ui_click_happened && mouse_inside) pressed = true;
@@ -420,6 +421,11 @@ function render() {
     if (button("New Game")) generate();
     
     if (ui_show_rules) show_rules();
+    
+    if (polygons.length == 0) {
+        draw_label_canvas({x: main_canvas.width / 2 - main_context.measureText("Victory!").width / 2, y: main_canvas.height / 2}, "Victory!", "green");
+        if (button_with_position("New Game", {x: main_canvas.width / 2 - button_width / 2, y: main_canvas.height / 2 + 40})) generate();
+    }
 }
 
 function same_vertex(vertex_1: Vector, vertex_2: Vector): boolean {
