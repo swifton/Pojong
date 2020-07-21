@@ -285,7 +285,10 @@ function button_with_position(text: string, position: Vector) {
     draw_label_canvas({x: position.x + button_width / 2 - main_context.measureText(text).width / 2, y: position.y + 22}, text, "blue");
     
     let pressed = false;
-    if (ui_click_happened && mouse_inside) pressed = true;
+    if (ui_click_happened && mouse_inside) {
+        ui_click_happened = false;
+        pressed = true;
+    }
     
     return pressed;
 }
@@ -633,8 +636,25 @@ function create_foam() {
     first_edge.v2 = tmp;
     add_polygon(first_edge, polygons[0], 0);
     
+    let possible_templates: number[] = [];
+    let budget = 4;
+    for (let j = 0; j < budget; j += 1) {
+        for (let i = 0; i < templates.length; i += 1) possible_templates.push(i);
+    }
+    
     while (polygons.length < 27) {
-        let template_i = random_integer(0, templates.length);
+        let possible_i = random_integer(0, possible_templates.length);
+        let template_i = possible_templates[possible_i];
+        
+        //let template_i = random_integer(0, templates.length);
+        
+        /*
+        let possible_i = random_integer(0, possible_templates.length);
+        let template_i = possible_templates[possible_i];
+        for (let i = 0; i < templates.length; i += 1) {
+            if (i != template_i) possible_templates.push(i);
+        }
+        */
         
         let old_length = polygons.length;
         // Find spots for two polygons of the same type
@@ -656,11 +676,15 @@ function create_foam() {
             if (polygons.length > 10 && polygons[polygons.length - 1].n_blocked_edges == 1 && polygons[polygons.length - 1].template_i != 0 && polygons[polygons.length - 1].template_i != 2) polygons.splice(polygons.length - 1, 1);
         }
         
+        if (max_iterations == 0) continue;
+        
         // Check if both of them are free. If not, start over.
         update_polygon_freeness(polygons[polygons.length - 2], polygons);
         update_polygon_freeness(polygons[polygons.length - 1], polygons);
         if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
             polygons.splice(polygons.length - 2, 2);
+        } else {
+            possible_templates.splice(possible_i, 1);
         }
     }
     
@@ -736,8 +760,9 @@ function mouse_up(x: number, y: number): void {
     pan_offset_y = 0;
     
     if (!panned) {
-        if (selected_polygon_i == undefined) {
+        if (selected_polygon_i == undefined && hovered_polygon_i != undefined) {
             selected_polygon_i = hovered_polygon_i;
+            ui_mouse_up = false;
         } else {
             if (hovered_polygon_i != undefined) {
                 if (selected_polygon_i == hovered_polygon_i) {
@@ -754,6 +779,8 @@ function mouse_up(x: number, y: number): void {
                     selected_polygon_i = undefined;
                     update_polygons_freeness(polygons);
                 }
+                
+                ui_mouse_up = false;
             }
         }
     }
@@ -1135,23 +1162,53 @@ function test_current_position(): number {
     if (n_losses == 0) ratio = 1000;
     console.log("Wins: " + n_wins.toString() + ", losses: " + n_losses.toString() + ", ratio: " + ratio.toString());
     console.log("Variation in frequencies: " + position_variation(polygons).toString());
-    return ratio;
+    return n_wins;
 }
 
 let sum_ratios = 0;
+let sum_squares = 0;
 function test_3() {
-    create_foam();
-    
-    n_iterations += 1;
-    
-    console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
-    
-    sum_ratios += test_current_position();
-    
-    console.log("Average ratio: " + (sum_ratios / n_iterations).toString());
-    
-    polygons = [];
-    setTimeout(test_3, 1);
+    while (true) {
+        create_foam();
+        
+        n_iterations += 1;
+        
+        console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
+        
+        let test_result = test_current_position();
+        sum_ratios += test_result;
+        sum_squares += Math.pow(test_result, 2);
+        
+        let mean = sum_ratios / n_iterations;
+        let variance = sum_squares / n_iterations - Math.pow(mean, 2);
+        console.log("Average wins: " + mean.toString());
+        console.log("Variance of wins: " + variance.toString());
+        
+        polygons = [];
+    }
+}
+
+let sum_var = 0;
+let sum_sq_var = 0;
+function test_4() {
+    while (true) {
+        create_foam();
+        
+        n_iterations += 1;
+        
+        console.log("Round# " + n_iterations.toString() + ". " + polygons.length.toString() + " polygons.");
+        
+        let test_result = position_variation(polygons);
+        sum_var += test_result;
+        sum_sq_var += Math.pow(test_result, 2);
+        
+        let mean = sum_var / n_iterations;
+        let variance = sum_sq_var / n_iterations - Math.pow(mean, 2);
+        console.log("Average variance: " + mean.toString());
+        console.log("Variance of variances: " + variance.toString());
+        
+        polygons = [];
+    }
 }
 
 let game_graph: Game_Graph = undefined;
@@ -1181,6 +1238,7 @@ function d_down() {
     console.log(find_possible_pairs(position_to_display));
 }
 
-// test_3();
+//test_3();
+//test_4();
 
 generate();
