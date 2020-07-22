@@ -94,6 +94,7 @@ let undo_stack: Polygon[][] = [];
 let initial_numbers = [20, 30, 40, 50, -1];
 let initial_i = 0;
 let custom_n_polygons = 36;
+let show_number_notice = false;
 
 let mouse_down_pos: number[];
 let pan_offset_x: number = 0;
@@ -424,6 +425,7 @@ function render() {
         if (initial_numbers[initial_i] == -1) {
             custom_n_polygons = parseInt(prompt("Number of polygons:", custom_n_polygons.toString()));
         }
+        show_number_notice = false;
         generate();
     }
     
@@ -435,6 +437,14 @@ function render() {
     if (button(n_polygons_button_label)) {
         initial_i += 1;
         initial_i %= initial_numbers.length;
+        show_number_notice = true;
+    }
+    
+    if (show_number_notice) {
+        if (initial_numbers[initial_i] != -1) {
+            draw_label_canvas({x: ui_cursor.x, y: ui_cursor.y + button_height}, "The next new game will be " + initial_numbers[initial_i].toString() + " polygons.", "white");
+        }
+        ui_cursor.y += button_height;
     }
     
     if (ui_show_rules) show_rules();
