@@ -91,8 +91,9 @@ let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
 let initial_position: Polygon[] = [];
 let undo_stack: Polygon[][] = [];
-let initial_numbers = [20, 30, 40, 50];
-let initial_i = 0; 
+let initial_numbers = [20, 30, 40, 50, -1];
+let initial_i = 0;
+let custom_n_polygons = 36;
 
 let mouse_down_pos: number[];
 let pan_offset_x: number = 0;
@@ -419,11 +420,19 @@ function render() {
     if (button("Rules")) ui_show_rules = true;
     if (button("Restart (R)")) restart();
     if (button("Undo (Z)")) undo();
-    if (button("New Game")) generate();
+    if (button("New Game")) {
+        if (initial_numbers[initial_i] == -1) {
+            custom_n_polygons = parseInt(prompt("Number of polygons:", custom_n_polygons.toString()));
+        }
+        generate();
+    }
     
     draw_label_canvas({x: ui_cursor.x, y: ui_cursor.y + button_height + 20}, "Number of polygons: ", "white");
     ui_cursor.y += button_height + 20;
-    if (button(initial_numbers[initial_i].toString())) {
+    let n_polygons_button_label: string;
+    if (initial_numbers[initial_i] == -1) n_polygons_button_label = "Custom";
+    else n_polygons_button_label = initial_numbers[initial_i].toString();
+    if (button(n_polygons_button_label)) {
         initial_i += 1;
         initial_i %= initial_numbers.length;
     }
@@ -647,7 +656,11 @@ function create_foam() {
         for (let i = 0; i < templates.length; i += 1) possible_templates.push(i);
     }
     
-    while (polygons.length < initial_numbers[initial_i]) {
+    let n_polygons_to_generate: number;
+    if (initial_numbers[initial_i] == -1) n_polygons_to_generate = custom_n_polygons;
+    else n_polygons_to_generate = initial_numbers[initial_i];
+    
+    while (polygons.length < n_polygons_to_generate) {
         console.log(polygons.length);
         //let possible_i = random_integer(0, possible_templates.length);
         //let template_i = possible_templates[possible_i];
