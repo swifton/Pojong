@@ -91,6 +91,8 @@ let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
 let initial_position: Polygon[] = [];
 let undo_stack: Polygon[][] = [];
+let initial_numbers = [20, 30, 40, 50];
+let initial_i = 0; 
 
 let mouse_down_pos: number[];
 let pan_offset_x: number = 0;
@@ -346,6 +348,7 @@ function show_rules() {
 }
 
 let ui_show_rules = false;
+let ui_show_number_of_polygons = false;
 
 function render() {
     reset_ui_frame();
@@ -417,6 +420,13 @@ function render() {
     if (button("Restart (R)")) restart();
     if (button("Undo (Z)")) undo();
     if (button("New Game")) generate();
+    
+    draw_label_canvas({x: ui_cursor.x, y: ui_cursor.y + button_height + 20}, "Number of polygons: ", "white");
+    ui_cursor.y += button_height + 20;
+    if (button(initial_numbers[initial_i].toString())) {
+        initial_i += 1;
+        initial_i %= initial_numbers.length;
+    }
     
     if (ui_show_rules) show_rules();
     
@@ -637,7 +647,7 @@ function create_foam() {
         for (let i = 0; i < templates.length; i += 1) possible_templates.push(i);
     }
     
-    while (polygons.length < 100) {
+    while (polygons.length < initial_numbers[initial_i]) {
         console.log(polygons.length);
         //let possible_i = random_integer(0, possible_templates.length);
         //let template_i = possible_templates[possible_i];
