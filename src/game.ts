@@ -1,3 +1,8 @@
+// TODO: 
+// Get rid of scrolling and panning.
+// Let people decide the size. 
+// Make a progress bar for generating. 
+
 function random_integer(min: number, max: number): number { // Including min, excluding max
 	return (min + Math.floor(Math.random() * (max - min)));
 }
@@ -378,17 +383,7 @@ function render() {
         else alpha = 0.3;
         
         draw_polygon(polygon, colors[polygon.template_i], alpha);
-        //draw_label(polygon.center, polygon_i.toString(), "orange");
-        /*
-        // Visualizing and labeling the center of the polygon.
-        main_context.fillStyle = "orange";
-        main_context.beginPath();
-        let canv_v = world_to_canvas(polygon.center);
-        main_context.font = '10px serif';
-        main_context.fillText(polygon_i.toString(), canv_v.x, canv_v.y);
-        //main_context.arc(canv_v.x, canv_v.y, 5, 0, 2 * Math.PI);
-        main_context.fill();
-        */
+        if (show_labels) draw_label(polygon.center, polygon_i.toString(), "orange");
     }
 	
     if (hovered_polygon_i != undefined) draw_polygon(polygons[hovered_polygon_i], "gray", 0.8);
@@ -642,11 +637,12 @@ function create_foam() {
         for (let i = 0; i < templates.length; i += 1) possible_templates.push(i);
     }
     
-    while (polygons.length < 27) {
-        let possible_i = random_integer(0, possible_templates.length);
-        let template_i = possible_templates[possible_i];
+    while (polygons.length < 100) {
+        console.log(polygons.length);
+        //let possible_i = random_integer(0, possible_templates.length);
+        //let template_i = possible_templates[possible_i];
         
-        //let template_i = random_integer(0, templates.length);
+        let template_i = random_integer(0, templates.length);
         
         /*
         let possible_i = random_integer(0, possible_templates.length);
@@ -684,7 +680,7 @@ function create_foam() {
         if (!polygons[polygons.length - 1].free || !polygons[polygons.length - 2].free) {
             polygons.splice(polygons.length - 2, 2);
         } else {
-            possible_templates.splice(possible_i, 1);
+            //possible_templates.splice(possible_i, 1);
         }
     }
     
@@ -1221,12 +1217,23 @@ function a_down() {
     game_graph = new Game_Graph(positions, turns, dead_ends);
     
     test_current_position();
+    
+    let previous_template_i = undefined;
+    let repetitions = 0;
+    for (let polygon_i = 0; polygon_i < polygons.length; polygon_i += 2) {
+        let polygon = polygons[polygon_i];
+        if (previous_template_i == polygon.template_i) repetitions += 1;
+        previous_template_i = polygon.template_i;
+    }
+    console.log("Repetitions: " + repetitions.toString());
 }
 
 function generate() {
     undo_stack = [];
     polygons = [];
     create_foam();
+    game_graph = undefined;
+    show_labels = false;
 }
 
 function d_down() {
@@ -1236,6 +1243,11 @@ function d_down() {
     else position_to_display = gg_position_to_display;
     
     console.log(find_possible_pairs(position_to_display));
+}
+
+let show_labels = false;
+function f_down() {
+    show_labels = true;
 }
 
 //test_3();

@@ -10,12 +10,13 @@ function do_key_down(e: KeyboardEvent) {
     
     if (i == 82) restart();
     if (i == 90) undo();
+    if (i == 65) a_down();
+    if (i == 70) f_down();
     
     /*
 if (i == 81) q_down();
     if (i == 69) e_down();
     if (i == 87) w_down();
-    if (i == 65) a_down();
     if (i == 68) d_down();
     
 
@@ -27,7 +28,6 @@ if (i == 81) q_down();
         if (i == 40 && typeof down_key_down != "undefined") down_key_down();
         if (i == 8 && typeof backspace_down != "undefined") backspace_down();  // CAUTION: doesn't work in Mozilla.
         if (i == 27 && typeof escape_down != "undefined") escape_down();
-        if (i == 70 && typeof f_down != "undefined") f_down();
         if (i == 71 && typeof g_down != "undefined") g_down();
         if (i == 88 && typeof x_down != "undefined") x_down();
         if (i == 67 && typeof c_down != "undefined") c_down();
