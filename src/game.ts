@@ -1283,7 +1283,60 @@ function f_down() {
     show_labels = true;
 }
 
+function logo() {
+    // [triangle_template, hexagon_template, rhombus_template, trapezoid_template, big_triangle_template, parallelogram_template, antirhombus_template];
+    let edge: Edge = {v1: {x: 0, y: 0}, v2: {x: Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, undefined, 5);
+    
+    edge = {v2: {x: 0, y: 0}, v1: {x: Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, polygons[0], 5);
+    
+    edge = {v2: {x: Math.sqrt(3)/2 + .01, y: -.5}, v1: {x: Math.sqrt(3)/2 + 1.01, y: -.5}};
+    add_polygon(edge, undefined, 6);
+    
+    edge = {v2: {x: Math.sqrt(3)/2 + 4.01, y: 1.5}, v1: {x: Math.sqrt(3)/2 + 5.01, y: 1.5}};
+    add_polygon(edge, undefined, 6);
+    
+    edge = {v2: {x: Math.sqrt(3)/2 + 4.01, y: 0}, v1: {x: Math.sqrt(3)/2 + 3.01, y: 0}};
+    add_polygon(edge, undefined, 6);
+    
+    
+    edge = {v1: {x: 8, y: 0}, v2: {x: 8 + Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, undefined, 5);
+    
+    edge = {v2: {x: 8, y: 0}, v1: {x: 8 + Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, polygons[polygons.length - 1], 5);
+    
+    edge = {v1: {x: 8 - 0.01, y: 1}, v2: {x: 8 - 0.01, y: 2}};
+    add_polygon(edge, polygons[polygons.length - 1], 2);
+    
+    edge = {v1: {x: 10 + 0.23, y: 0}, v2: {x: 10 + 0.23 + Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, undefined, 5);
+    
+    edge = {v1: {x: 12 - 0.01, y: 0.5}, v2: {x: 12 - 0.01, y: 1.5}};
+    add_polygon(edge, polygons[polygons.length - 1], 2);
+    
+    edge = {v1: {x: 12, y: 0}, v2: {x: 12 + Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, undefined, 5);
+    
+    edge = {v1: {x: 16, y: 1}, v2: {x: 16, y: 2}};
+    add_polygon(edge, polygons[polygons.length - 1], 3);
+    
+    edge = {v1: {x: 16, y: 0}, v2: {x: 16 + Math.sqrt(3)/2, y: - 1/2}};
+    add_polygon(edge, undefined, 5);
+    
+    edge = {v2: {x: 12 + Math.sqrt(3)/2 + 4.01, y: -1.5}, v1: {x: 12 + Math.sqrt(3)/2 + 5.01, y: -1.5}};
+    add_polygon(edge, undefined, 6);
+    
+    edge = {v2: {x: 12 + Math.sqrt(3)/2 + 4.01, y: -3}, v1: {x: 12 + Math.sqrt(3)/2 + 3.01, y: -3}};
+    add_polygon(edge, undefined, 6);
+    
+    for (let polygon of polygons) polygon.free = true;
+}
+
 //test_3();
 //test_4();
 
-generate();
+// generate();
+
+logo();
