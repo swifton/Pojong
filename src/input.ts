@@ -10,10 +10,12 @@ function do_key_down(e: KeyboardEvent) {
     
     if (i == 82) restart();
     if (i == 90) undo();
-    if (i == 65) a_down();
-    if (i == 70) f_down();
     
     /*
+    
+if (i == 65) a_down();
+    if (i == 70) f_down();
+
 if (i == 81) q_down();
     if (i == 69) e_down();
     if (i == 87) w_down();

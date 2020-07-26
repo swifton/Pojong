@@ -1,6 +1,4 @@
 // TODO: 
-// Get rid of scrolling and panning.
-// Let people decide the size. 
 // Make a progress bar for generating. 
 
 function random_integer(min: number, max: number): number { // Including min, excluding max
@@ -783,7 +781,7 @@ function mouse_up(x: number, y: number): void {
     
     old_pan_offset_x += pan_offset_x;
     old_pan_offset_y += pan_offset_y;
-    if (Math.abs(pan_offset_x) + Math.abs(pan_offset_y) < 5) panned = false;
+    if (Math.abs(pan_offset_x) + Math.abs(pan_offset_y) < 15) panned = false;
     
     pan_offset_x = 0;
     pan_offset_y = 0;
@@ -1337,6 +1335,4 @@ function logo() {
 //test_3();
 //test_4();
 
-// generate();
-
-logo();
+generate();
