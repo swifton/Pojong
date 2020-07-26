@@ -339,6 +339,8 @@ function show_rules() {
     
     for (let line of lines) {
         width = main_context.measureText(line).width;
+        console.log("Line width: " + width.toString());
+        console.log(main_context.measureText(line));
         draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "black");
         if (line[line.length - 1] == ".") start_y += 40;
         else start_y += 20;
@@ -669,7 +671,7 @@ function create_foam() {
     else n_polygons_to_generate = initial_numbers[initial_i];
     
     while (polygons.length < n_polygons_to_generate) {
-        console.log(polygons.length);
+        //console.log(polygons.length);
         //let possible_i = random_integer(0, possible_templates.length);
         //let template_i = possible_templates[possible_i];
         
@@ -786,10 +788,10 @@ function mouse_up(x: number, y: number): void {
     pan_offset_x = 0;
     pan_offset_y = 0;
     
+    // TODO: Make a sound system for determining who takes the click input.
     if (!panned) {
         if (selected_polygon_i == undefined && hovered_polygon_i != undefined) {
             selected_polygon_i = hovered_polygon_i;
-            ui_mouse_up = false;
         } else {
             if (hovered_polygon_i != undefined) {
                 if (selected_polygon_i == hovered_polygon_i) {
@@ -806,8 +808,6 @@ function mouse_up(x: number, y: number): void {
                     selected_polygon_i = undefined;
                     update_polygons_freeness(polygons);
                 }
-                
-                ui_mouse_up = false;
             }
         }
     }
