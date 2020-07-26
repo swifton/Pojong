@@ -89,9 +89,9 @@ let canvas_center = [0, 0];
 let polygons: Polygon[] = [];
 let initial_position: Polygon[] = [];
 let undo_stack: Polygon[][] = [];
-let initial_numbers = [20, 30, 40, 50, -1];
-let initial_i = 0;
-let custom_n_polygons = 36;
+let initial_numbers = [26, 36, 50, 70, -1];
+let initial_i = 1;
+let custom_n_polygons = 40;
 let show_number_notice = false;
 
 let mouse_down_pos: number[];
@@ -339,8 +339,6 @@ function show_rules() {
     
     for (let line of lines) {
         width = main_context.measureText(line).width;
-        console.log("Line width: " + width.toString());
-        console.log(main_context.measureText(line));
         draw_label_canvas({x: main_canvas.width / 2 - width / 2, y: start_y}, line, "black");
         if (line[line.length - 1] == ".") start_y += 40;
         else start_y += 20;
@@ -442,7 +440,7 @@ function render() {
     
     if (show_number_notice) {
         if (initial_numbers[initial_i] != -1) {
-            draw_label_canvas({x: ui_cursor.x, y: ui_cursor.y + button_height}, "The next new game will be " + initial_numbers[initial_i].toString() + " polygons.", "white");
+            draw_label_canvas({x: ui_cursor.x, y: ui_cursor.y + button_height}, "The next game will be " + initial_numbers[initial_i].toString() + " polygons.", "white");
         }
         ui_cursor.y += button_height;
     }
@@ -451,7 +449,10 @@ function render() {
     
     if (polygons.length == 0) {
         draw_label_canvas({x: main_canvas.width / 2 - main_context.measureText("Victory!").width / 2, y: main_canvas.height / 2}, "Victory!", "green");
-        if (button_with_position("New Game", {x: main_canvas.width / 2 - button_width / 2, y: main_canvas.height / 2 + 40})) generate();
+        if (button_with_position("New Game", {x: main_canvas.width / 2 - button_width / 2, y: main_canvas.height / 2 + 40})) {
+            show_number_notice = false;
+            generate();
+        }
     }
 }
 
