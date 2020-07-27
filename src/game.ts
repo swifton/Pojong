@@ -893,7 +893,8 @@ function mouse_move(x: number, y: number): void {
 }
 
 function mouse_scroll(direction: number): void {
-    unit_pix += direction * 10;
+    unit_pix *= Math.pow(1.2, direction);
+    
 }
 
 function restart() {
