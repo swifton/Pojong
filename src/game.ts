@@ -107,6 +107,14 @@ let selected_polygon_i: number = undefined;
 let base_polygon: Polygon = undefined;
 let to_add_type = 3;
 
+let n_of_wins = 0;
+let n_of_abandons = 0;
+let n_of_restarts = 0;
+let n_of_undos = 0;
+let n_of_same_game_victories = 0;
+let n_of_games = 0;
+let n_of_polygons_total = 0;
+
 let triangle_template: Polygon_Template = {vertices: [{x: 0, y: 0}, 
                                                       {x: 0.5, y: Math.sqrt(3)/2}, 
                                                       {x: 1, y: 0}]};
@@ -420,10 +428,11 @@ function render() {
     if (button("Restart (R)")) restart();
     if (button("Undo (Z)")) undo();
     if (button("New Game")) {
+        if (n_of_same_game_victories == 0) n_of_abandons += 1;
         if (initial_numbers[initial_i] == -1) {
             custom_n_polygons = parseInt(prompt("Number of polygons:", custom_n_polygons.toString()));
         }
-        show_number_notice = false;
+        reset_game();
         generate();
     }
     
@@ -450,10 +459,18 @@ function render() {
     if (polygons.length == 0) {
         draw_label_canvas({x: main_canvas.width / 2 - main_context.measureText("Victory!").width / 2, y: main_canvas.height / 2}, "Victory!", "green");
         if (button_with_position("New Game", {x: main_canvas.width / 2 - button_width / 2, y: main_canvas.height / 2 + 40})) {
-            show_number_notice = false;
+            reset_game();
             generate();
         }
     }
+}
+
+function reset_game() {
+    gtag('event', 'restart_game', {'n_same': n_of_same_game_victories, 'n_undos': n_of_undos, 'n_restarts': n_of_restarts});
+    show_number_notice = false;
+    n_of_restarts = 0;
+    n_of_undos = 0;
+    n_of_same_game_victories = 0;
 }
 
 function same_vertex(vertex_1: Vector, vertex_2: Vector): boolean {
@@ -723,6 +740,9 @@ function create_foam() {
     update_polygons_freeness(polygons);
     
     initial_position = JSON.parse(JSON.stringify(polygons));
+    
+    n_of_games += 1;
+    n_of_polygons_total += polygons.length;
 }
 
 function update_polygon_freeness(polygon: Polygon, position: Polygon[]): void {
@@ -808,6 +828,10 @@ function mouse_up(x: number, y: number): void {
                     hovered_polygon_i = undefined;
                     selected_polygon_i = undefined;
                     update_polygons_freeness(polygons);
+                    if (polygons.length == 0) {
+                        if (n_of_same_game_victories == 0) n_of_wins += 1;
+                        n_of_same_game_victories += 1;
+                    }
                 }
             }
         }
@@ -898,6 +922,7 @@ function mouse_scroll(direction: number): void {
 }
 
 function restart() {
+    n_of_restarts += 1;
     gg_position_to_display = undefined;
     polygons = JSON.parse(JSON.stringify(initial_position));
     undo_stack = [];
@@ -906,6 +931,7 @@ function restart() {
 
 function undo() {
     if (undo_stack.length > 0) {
+        n_of_undos += 1;
         polygons = undo_stack.pop();
         selected_polygon_i = undefined;
     }
@@ -1333,6 +1359,10 @@ function logo() {
     
     for (let polygon of polygons) polygon.free = true;
 }
+
+window.addEventListener("beforeunload", function(e){
+                            gtag('event', 'end_of_session', {'n_wins': n_of_wins, 'n_abandons': n_of_abandons, 'n_polygons_average': n_of_polygons_total / n_games});
+                        }, false);
 
 //test_3();
 //test_4();
